@@ -27,6 +27,7 @@ def prepare(text):
     tokenizer = get_tokenizer()
     tokens = tokenizer.texts_to_sequences(text)
     tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
+    return tokens
     
 def load_model():
     uri_path = Path.cwd().joinpath('artifact/model').as_uri()
@@ -35,7 +36,9 @@ def load_model():
     
 
 def classify(text):
+    print("Loading the model...")
     model = load_model()
+    print("Successful!")
     preds = model.predict(text)
     return preds
 
@@ -44,19 +47,21 @@ app = Flask('fake-news-classifier')
 
 
 @app.route('/classify', methods=['POST'])
-def predict_endpoint():
+def classify_endpoint():
     text = request.get_json()
 
     prepped_text = prepare(text['text'])
+
     pred = classify(prepped_text)
 
     result = {
         'text': text['text'],
-        'class': pred
+        'class': 'boy'
     }
 
     return jsonify(result)
 
 
 if __name__ == "__main__":
+
     app.run(debug=True, host='0.0.0.0', port=9696)

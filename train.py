@@ -1,11 +1,4 @@
 import os
-os.environ['MLFLOW_TRACKING_PASSWORD'] = '***REMOVED***'
-os.environ['MLFLOW_TRACKING_URI']="***REMOVED***"
-os.environ['MLFLOW_TRACKING_USERNAME']="***REMOVED***"
-os.environ['AWS_SECRET_ACCESS_KEY']='***REMOVED***'
-os.environ['AWS_ACCESS_KEY_ID'] = '***REMOVED***'
-os.environ['KAGGLE_USERNAME'] = '***REMOVED***'
-os.environ['KAGGLE_KEY'] = '***REMOVED***'
 
 import numpy as np
 import pandas as pd
@@ -38,16 +31,12 @@ import prefect
 from prefect import flow, task
 from prefect.task_runners import SequentialTaskRunner
 
-EXPT_NAME = 'final-goal'
-MLFLOW_TRACKING_URI=os.environ['MLFLOW_TRACKING_URI']
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-mlflow.set_experiment(EXPT_NAME)
-mlflow.tensorflow.autolog()
-
-@task
+@task(retries=2)
 def read_***REMOVED***(path):
+    print('Loading ***REMOVED***... ')
     true = pd.read_csv(f"{path}/True.csv")
     false = pd.read_csv(f"{path}/Fake.csv")
+    print('Loaded ')
 
     true['category'] = 1
     false['category'] = 0
@@ -58,6 +47,7 @@ def read_***REMOVED***(path):
     del df['title']
     del df['subject']
     del df['date']
+    print('df done')
     return df
 
 def strip_html(text):
@@ -88,6 +78,7 @@ def denoise_text(text):
 
 @task
 def clean_split_***REMOVED***(df):
+    print(":split")
     df['text']=df['text'].apply(denoise_text)
     x_train,x_test,y_train,y_test = train_test_split(df.text,df.category,random_state = 0)
 
@@ -138,9 +129,7 @@ def create_lstm_model(trial, max_features, embed_size, embedding_matrix, maxlen)
     activation_1 = trial.suggest_categorical("activation", ["relu", "selu", "elu"])
     mlflow.log_param("activation_1", activation_1)
     model.add(Dense(units = 32 , activation = activation_1))
-    activation_2 = trial.suggest_categorical("activation_2", ["sigmoid", "softmax"])
-    mlflow.log_param("activation_2", activation_2)
-    model.add(Dense(1, activation=activation_2))
+    model.add(Dense(1, activation='sigmoid'))
     # lr = trial.suggest_uniform("lr", 1e-5, 1e-1)
     # mlflow.log_param("learning_rate", lr)
     mlflow.log_artifact("./save/tokenizer.bin")
@@ -176,7 +165,7 @@ def train(x_train, y_train, batch_size, x_test, y_test, epochs, max_features, em
     study.optimize(func, n_trials=5)
 
 @task
-def register_best_model():
+def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI):
     experiment = client.get_experiment_by_name(EXPT_NAME)
 
     client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
@@ -230,6 +219,12 @@ def register_best_model():
 
 @flow(task_runner=SequentialTaskRunner()) 
 def main():
+    nltk.download('stopwords')
+    EXPT_NAME = 'final-goal'
+    MLFLOW_TRACKING_URI=os.environ['MLFLOW_TRACKING_URI']
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    mlflow.set_experiment(EXPT_NAME)
+    mlflow.tensorflow.autolog()
     batch_size = 256
     epochs = 3
     embed_size = 100
@@ -237,25 +232,30 @@ def main():
     maxlen = 300
 
     path = "./***REMOVED***"
-    ***REMOVED***frame = read_***REMOVED***(path)
+    ***REMOVED***frame = read_***REMOVED***.fn(path)
     x_train,x_test,y_train,y_test = clean_split_***REMOVED***(***REMOVED***frame)
-    x_train, x_test, tokenizer = tokenize(x_train, x_test, max_features, maxlen)
+    x_train, x_test, tokenizer = tokenize(x_train, x_test, max_features, maxlen).result()
 
     with open('./save/tokenizer.bin', 'wb') as f_out:
         pickle.dump(tokenizer, f_out)
     EMBEDDING_FILE = f'{path}/glove.twitter.27B.100d.txt'
-    embedding_matrix = get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features)
+    embedding_matrix = get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features).result()
     learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.5, min_lr=0.00001)
     train(x_train, y_train, batch_size, x_test, y_test, epochs, max_features, embed_size, embedding_matrix, maxlen)
-    register_best_model()
+    register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI)
 
-from prefect.deployments import Deployment
-from prefect.orion.schemas.schedules import CronSchedule
-from prefect.flow_runners import SubprocessFlowRunner
+if __name__ == "__main__":
+    main()
 
-Deployment(
-    flow=main,
-    name="model_training",
-    schedule=CronSchedule(cron="0 9 15 * *"),
-    flow_runner=SubprocessFlowRunner(),
-)
+
+
+# from prefect.deployments import Deployment
+# from prefect.orion.schemas.schedules import CronSchedule
+# from prefect.flow_runners import SubprocessFlowRunner
+
+# Deployment(
+#     flow=main,
+#     name="model_training",
+#     schedule=CronSchedule(cron="0 9 15 * *"),
+#     flow_runner=SubprocessFlowRunner(),
+# )

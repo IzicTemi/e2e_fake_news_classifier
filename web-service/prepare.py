@@ -2,10 +2,6 @@ import os
 
 import mlflow
 from mlflow.tracking import MlflowClient
-
-from flask import Flask, request, jsonify
-
-
 import mlflow.pyfunc
 
 MLFLOW_TRACKING_URI=os.environ['MLFLOW_TRACKING_URI']

@@ -22,3 +22,7 @@ publish: build integration_test
 setup:
 	pipenv install --dev
 	pre-commit install
+
+create-bucket:
+	cd infrastructure && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
+

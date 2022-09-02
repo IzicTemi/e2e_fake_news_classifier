@@ -1,13 +1,14 @@
+#pylint: disable=import-error
+#pylint: disable=no-name-in-module
+
 import os
 import pickle
 
 import mlflow
 from mlflow.tracking import MlflowClient
-
-from flask import Flask, request, jsonify
-
 import mlflow.pyfunc
-from tensorflow.keras.preprocessing import text, sequence
+
+from tensorflow.keras.preprocessing import sequence
 
 from pathlib import Path
 
@@ -42,12 +43,9 @@ def classify(text):
     preds = model.predict(text)
     return preds
 
-
-# app = Flask('fake-news-classifier')
-
-
-# @app.route('/classify', methods=['POST'])
 def lambda_handler(event, context):
+    #pylint: disable=unused-argument
+    #pylint: disable=unused-variable
     text = event['text']
 
     prepped_text = prepare(text)
@@ -60,9 +58,3 @@ def lambda_handler(event, context):
     }
 
     return result
-
-"""
-if __name__ == "__main__":
-    a = lambda_handler({"text": "boy"}, None)
-    print(a)
-"""

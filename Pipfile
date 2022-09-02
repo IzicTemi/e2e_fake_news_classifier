@@ -10,12 +10,19 @@ nltk = "*"
 numpy = "*"
 pandas = "*"
 sklearn = "*"
-prefect = "==2.0b10"
 beautifulsoup4 = "*"
-tf-nightly = {file = "https://files.pythonhosted.org/packages/c5/70/c36902cd66b5a49f4a370dc70a523b6436bf771ac0f5d1a1cf78e2b1e547/tf_nightly-2.11.0.dev20220830-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"}
+tensorflow-cpu = {file = "https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow_cpu-2.9.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"}
+kaggle = "*"
+prefect = "==2.0b8"
 
 [dev-packages]
 ipykernel = "*"
+pre-commit = "*"
+black = "*"
+isort = "*"
+pytest = "*"
+pylint = "*"
+deepdiff = "*"
 
 [requires]
 python_version = "3.9"

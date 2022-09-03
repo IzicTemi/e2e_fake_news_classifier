@@ -28,7 +28,13 @@ jobs:
         run: pip install pipenv && pipenv install --dev
 
       - name: Run Unit tests
-        run: pipenv run pytest tests/
+        run: |
+          touch .env
+          echo "KAGGLE_USERNAME = ${{ env.KAGGLE_USERNAME }}" > .env
+          echo "KAGGLE_KEY = ${{ env.KAGGLE_KEY }}" >> .env
+          echo "DATA_PATH = ${{ env.DATA_PATH }}" >> .env
+          cat .env
+          pipenv run pytest tests/
 
       - name: Lint
         run: pipenv run pylint --recursive=y .

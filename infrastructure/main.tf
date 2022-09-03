@@ -4,13 +4,13 @@ terraform {
   backend "s3" {
     bucket  = "my-tf-state-mlops-zoomcamp"
     key     = "mlops-final-prod.tfstate"
-    region  = "us-east-1"
+    region  = var.region
     encrypt = true
   }
 }
 
 provider "aws" {
-  region = var.aws_region
+  region = var.region
 }
 
 ***REMOVED*** "aws_caller_identity" "current_identity" {}
@@ -22,7 +22,7 @@ locals {
 # model bucket
 module "s3_bucket" {
   source = "./modules/s3"
-  bucket_name = "${var.model_bucket}"
+  bucket_name = "${var.model_bucket}-${var.project_id}"
 }
 
 # image registry

@@ -12,7 +12,6 @@ variable "image_uri" {
 variable "region" {
     type        = string
     description = "region"
-    default = "us-east-1"
 }
 
 variable "account_id" {

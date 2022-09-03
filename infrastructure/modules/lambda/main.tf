@@ -14,8 +14,8 @@ resource "aws_lambda_function" "pred_lambda" {
       MODEL_BUCKET = var.model_bucket
     }
   }
-  timeout = 180
-  memory_size = 4000
+  timeout = 300
+  memory_size = 2000
 }
 
 # Lambda Invoke & Event Source Mapping:
@@ -95,7 +95,7 @@ resource "aws_api_gateway_stage" "test" {
 
 # IAM for api
 
-resource "aws_api_gateway_rest_api_policy" "test" {
+resource "aws_api_gateway_rest_api_policy" "api_allow_invoke" {
   rest_api_id = aws_api_gateway_rest_api.lambda-api.id
 
   policy = <<EOF

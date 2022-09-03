@@ -5,3 +5,5 @@ make create-bucket
 
 Edit set_env
 source set_env.sh
+
+Add option to train only once

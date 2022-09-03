@@ -2,7 +2,7 @@
 artifact/
 **/artifacts/
 **/models/
-
+**.vscode/
 __pycache__/
 **.env
 **.terraform/

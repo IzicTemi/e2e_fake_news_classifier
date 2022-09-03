@@ -8,3 +8,4 @@ export AWS_ACCESS_KEY_ID=***REMOVED***
 export KAGGLE_USERNAME=***REMOVED***
 export KAGGLE_KEY=***REMOVED***
 export DATA_PATH=***REMOVED***
+export ARTIFACT_LOC=***REMOVED***

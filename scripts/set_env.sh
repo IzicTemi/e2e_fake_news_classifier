@@ -9,3 +9,9 @@ export KAGGLE_USERNAME=***REMOVED***
 export KAGGLE_KEY=***REMOVED***
 export DATA_PATH=***REMOVED***
 export ARTIFACT_LOC=***REMOVED***
+
+
+touch ../.env
+echo "KAGGLE_USERNAME = $KAGGLE_USERNAME" > ../.env
+echo "KAGGLE_KEY = $KAGGLE_KEY" >> ../.env
+echo "DATA_PATH = $DATA_PATH" >> ../.env

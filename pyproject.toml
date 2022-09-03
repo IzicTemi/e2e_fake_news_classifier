@@ -7,7 +7,8 @@ disable = [
     "missing-module-docstring",
     "invalid-name",
     "too-few-public-methods",
-    "inconsistent-return-statements"
+    "inconsistent-return-statements",
+    "redefined-outer-name"
 ]
 
 [tool.black]
@@ -16,6 +17,7 @@ target-version = ['py39']
 skip-string-normalization = true
 
 [tool.isort]
+profile = "black"
 multi_line_output = 3
 length_sort = true
 

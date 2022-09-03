@@ -1,16 +1,18 @@
 import os
-import sys
+
+# import sys
 from pathlib import Path
 
 import get_***REMOVED***
 
-# # lambda_function_path = str(Path.cwd().parent.absolute().joinpath('web_service'))
+# lambda_function_path = str(Path.cwd().parent.absolute().joinpath('web_service'))
 
 # sys.path.insert(0, lambda_function_path)
 
 # from lambda_function import classify, lambda_handler
 
 # classify("ball")
+
 
 def test_get_***REMOVED***():
     DATA_PATH = get_***REMOVED***.DATA_PATH
@@ -22,7 +24,6 @@ def test_get_***REMOVED***():
     assert 'TopRichestInWorld.csv' in os.listdir(DATA_PATH)
     get_***REMOVED***.del_zip()
     assert '100-richest-people-in-world.zip' not in os.listdir(DATA_PATH)
-
 
 
 # class ModelMock:

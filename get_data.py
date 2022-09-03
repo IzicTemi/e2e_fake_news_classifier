@@ -4,7 +4,6 @@ from pathlib import Path
 
 import kaggle
 
-
 KAGGLE_USERNAME = os.getenv("KAGGLE_USERNAME")
 KAGGLE_KEY = os.getenv("KAGGLE_KEY")
 
@@ -14,6 +13,7 @@ GLOVE_EMBEDDINGs_URL = 'icw123/glove-twitter'
 DATA_PATH = os.getenv("DATA_PATH")
 
 Path(DATA_PATH).mkdir(parents=True, exist_ok=True)
+
 
 def download_***REMOVED***set(DATASET_KAGGLE_URL):
     '''

@@ -53,8 +53,8 @@ def lambda_handler(event, context):
     pred = classify(prepped_text)
 
     result = {
-        'text': text, 
+        'text': text,
         'class': 'boy',
-        }
+    }
 
     return result

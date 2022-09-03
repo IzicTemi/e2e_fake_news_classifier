@@ -11,13 +11,10 @@ quality_checks:
 	pylint --recursive=y .
 
 build: quality_checks test
-	docker build -t ${LOCAL_IMAGE_NAME} .
+	cd web_service && docker build -t ${LOCAL_IMAGE_NAME} .
 
 integration_test: build
-	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integraton-test/run.sh
-
-publish: build integration_test
-	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
+	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integration-test/run.sh
 
 setup:
 	pipenv install --dev
@@ -25,4 +22,3 @@ setup:
 
 create-bucket:
 	cd infrastructure && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
-

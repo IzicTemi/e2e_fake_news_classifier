@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Unit tests
         run: pipenv run pytest tests/
-      
+
       - name: Lint
         run: pipenv run pylint --recursive=y .
 
@@ -36,12 +36,12 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-      
+
       - name: Integration Test
-        working-directory: "integraton-test"
+        working-directory: 'integraton-test'
         run: |
           . run.sh
-        
+
   tf-plan:
     runs-on: ubuntu-latest
     steps:
@@ -52,10 +52,10 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
-    
+
       - uses: hashicorp/setup-terraform@v2
       - name: TF plan
         id: plan
         working-directory: 'infrastructure'
         run: |
-          terraform init -backend-config="key=mlops-zoomcamp-prod.tfstate" -reconfigure && terraform plan -var-file vars/prod.tfvars
+          terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file vars/prod.tfvars

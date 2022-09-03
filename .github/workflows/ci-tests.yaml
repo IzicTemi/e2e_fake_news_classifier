@@ -10,6 +10,9 @@ env:
   AWS_DEFAULT_REGION: 'us-east-1'
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+  KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+  DATA_PATH: '***REMOVED***'
 
 jobs:
   test:
@@ -25,7 +28,9 @@ jobs:
         run: pip install pipenv && pipenv install --dev
 
       - name: Run Unit tests
-        run: pipenv run pytest tests/
+        run: |
+          pipenv shell
+          KAGGLE_USERNAME=${{ env.KAGGLE_USERNAME }} KAGGLE_KEY=${{ env.KAGGLE_KEY }} DATA_PATH=${{ env.DATA_PATH }} pytest tests/
 
       - name: Lint
         run: pipenv run pylint --recursive=y .

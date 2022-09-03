@@ -46,7 +46,7 @@ jobs:
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image-step
-        working-directory: "web-service"
+        working-directory: "web_service"
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}

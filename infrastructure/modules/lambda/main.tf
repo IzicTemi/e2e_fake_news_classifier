@@ -60,6 +60,11 @@ resource "aws_api_gateway_method_response" "response_200" {
   resource_id = aws_api_gateway_resource.proxypred.id
   http_method = aws_api_gateway_method.methodproxy.http_method
   status_code = aws_api_gateway_method_response.response_200.status_code
+
+  depends_on = [
+    aws_api_gateway_integration.apilambda
+  ]
+
 }
 
  resource "aws_lambda_permission" "apigw_lambda" {
@@ -106,14 +111,14 @@ resource "aws_api_gateway_rest_api_policy" "api_allow_invoke" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": [
-        "execute-api:Invoke"           
+        "execute-api:Invoke"
       ],
       "Resource": [
         "arn:aws:execute-api:${var.region}:${var.account_id}:${aws_api_gateway_rest_api.lambda-api.id}/*/${aws_api_gateway_method.methodproxy.http_method}${aws_api_gateway_resource.proxypred.path}"
       ]
     }
   ]
-} 
+}
 EOF
 }
 

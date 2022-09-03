@@ -3,8 +3,8 @@ terraform {
   required_version = ">= 1.0"
   backend "s3" {
     bucket  = "my-tf-state-mlops-zoomcamp"
-    key     = "mlops-final-prod.tfstate"
-    region  = var.region
+    key     = "mlops-final-stg.tfstate"
+    region  = "us-east-1"
     encrypt = true
   }
 }
@@ -30,8 +30,7 @@ module "ecr_image" {
    source = "./modules/ecr"
    ecr_repo_name = "${var.ecr_repo_name}-${var.project_id}"
    account_id = local.account_id
-   lambda_function_local_path = var.lambda_function_local_path
-   docker_image_local_path = var.docker_image_local_path
+   region = var.region
 }
 
 module "lambda_function" {
@@ -40,6 +39,7 @@ module "lambda_function" {
   lambda_function_name = "${var.lambda_function_name}-${var.project_id}"
   model_bucket = module.s3_bucket.name
   account_id = local.account_id
+  region = var.region
 }
 
 # For CI/CD

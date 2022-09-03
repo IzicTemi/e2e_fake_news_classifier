@@ -13,16 +13,12 @@ resource "aws_ecr_repository" "repo" {
 # But because the lambda config would fail without an existing Image URI in ECR,
 # we can also upload any base image to bootstrap the lambda config, unrelated to your Inference logic
 resource null_resource ecr_image {
-   triggers = {
-     python_file = md5(file(var.lambda_function_local_path))
-     docker_file = md5(file(var.docker_image_local_path))
-   }
 
    provisioner "local-exec" {
      command = <<EOF
              aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin ${var.account_id}.dkr.ecr.${var.region}.amazonaws.com
-             cd ../web_service
-             docker build -t ${aws_ecr_repository.repo.repository_url}:${var.ecr_image_tag} .
+             docker pull amazon/aws-lambda-python
+             docker tag amazon/aws-lambda-python ${aws_ecr_repository.repo.repository_url}:${var.ecr_image_tag}
              docker push ${aws_ecr_repository.repo.repository_url}:${var.ecr_image_tag}
          EOF
    }

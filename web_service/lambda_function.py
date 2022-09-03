@@ -1,25 +1,23 @@
-#pylint: disable=import-error
-#pylint: disable=no-name-in-module
+# pylint: disable=import-error
+# pylint: disable=no-name-in-module
 
 import os
 import pickle
-
-import mlflow
-from mlflow.tracking import MlflowClient
-import mlflow.pyfunc
-
-from tensorflow.keras.preprocessing import sequence
-
 from pathlib import Path
 
-MLFLOW_TRACKING_URI=os.environ['MLFLOW_TRACKING_URI']
+import mlflow
+import mlflow.pyfunc
+from mlflow.tracking import MlflowClient
+from tensorflow.keras.preprocessing import sequence
+
+MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 
 
 def get_tokenizer():
     with open('./artifact/tokenizer.bin', "rb") as f_in:
         tokenizer = pickle.load(f_in)
-    
+
     return tokenizer
 
 
@@ -29,12 +27,13 @@ def prepare(text):
     tokens = tokenizer.texts_to_sequences(text)
     tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
     return tokens
-    
+
+
 def load_model():
     uri_path = Path.cwd().joinpath('artifact/model').as_uri()
     model = mlflow.keras.load_model(uri_path)
     return model
-    
+
 
 def classify(text):
     print("Loading the model...")
@@ -43,9 +42,10 @@ def classify(text):
     preds = model.predict(text)
     return preds
 
+
 def lambda_handler(event, context):
-    #pylint: disable=unused-argument
-    #pylint: disable=unused-variable
+    # pylint: disable=unused-argument
+    # pylint: disable=unused-variable
     text = event['text']
 
     prepped_text = prepare(text)
@@ -53,8 +53,8 @@ def lambda_handler(event, context):
     pred = classify(prepped_text)
 
     result = {
-        'text': text,
-        'class': 'boy'
-    }
+        'text': text, 
+        'class': 'boy',
+        }
 
     return result

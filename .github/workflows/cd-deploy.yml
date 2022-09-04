@@ -44,7 +44,7 @@ jobs:
           echo "::set-output name=lambda_function::$(terraform output lambda_function | xargs)"
           echo "::set-output name=lambda_rest_api_url::$(terraform output lambda_rest_api_url | xargs)"
 
-      # Build-Push-Deploy
+      # Build-Push
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -75,3 +75,21 @@ jobs:
             --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image_uri::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      # Deploy
+      - name: Update function container
+        id: deploy-step
+        env:
+          LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function }}
+          IMAGE_URI: ${{ steps.build-image-step.outputs.image_uri }}
+        run: |
+          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+              while [[ "$STATE" == "InProgress" ]]
+              do
+                  echo "sleep 5sec ...."
+                  sleep 5s
+                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+                  echo $STATE
+              done
+
+          aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $IMAGE_URI

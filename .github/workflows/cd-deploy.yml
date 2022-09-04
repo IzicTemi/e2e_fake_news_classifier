@@ -5,6 +5,10 @@ on:
       - 'develop'
   #  paths:
   #    - '06-best-practices/code/**'
+env:
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
 
 jobs:
   allow-ssh:
@@ -66,11 +70,13 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
         run: |
+          echo ${MLFLOW_TRACKING_URI} | sed 's/./& /g'
+          echo ${MLFLOW_TRACKING_USERNAME} | sed 's/./& /g'
           docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
-            --build-arg MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI \
-            --build-arg MLFLOW_TRACKING_USERNAME=$MLFLOW_TRACKING_USERNAME \
-            --build-arg MLFLOW_TRACKING_PASSWORD=$MLFLOW_TRACKING_PASSWORD \
-            --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
-            --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
+            --build-arg MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME} \
+            --build-arg MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD} \
+            --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+            --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image_uri::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"

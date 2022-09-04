@@ -32,7 +32,6 @@ jobs:
           export KAGGLE_USERNAME=${KAGGLE_USERNAME}
           export KAGGLE_KEY=${KAGGLE_KEY}
           export DATA_PATH=${DATA_PATH}
-          echo ${KAGGLE_USERNAME} | sed 's/./& /g'
           pipenv run pytest tests/
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
@@ -57,6 +56,8 @@ jobs:
           export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
           export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
           export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+          echo ${MLFLOW_TRACKING_PASSWORD} | sed 's/./& /g'
+          echo $${MLFLOW_TRACKING_URI} | sed 's/./& /g'
           ./run.sh
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

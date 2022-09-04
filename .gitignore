@@ -1,4 +1,4 @@
-***REMOVED***/
+data/
 artifact/
 **/artifacts/
 **/models/
@@ -10,4 +10,4 @@ __pycache__/
 **terraform.tfstate*
 old-tran.py
 passwords.txt
-**set_env.sh
+scripts/set_env.sh

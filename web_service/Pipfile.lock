@@ -72,7 +72,7 @@
             "markers": "python_version >= '3.6'",
             "version": "==2.1.0"
         },
-        "***REMOVED***bricks-cli": {
+        "databricks-cli": {
             "hashes": [
                 "sha256:2f00f3e70e859809f0595885ec76fc73ba60ad0cccd69564f7df5d95b6c90066",
                 "sha256:f090c2e4f99c39d69a7f7228e6c7df8cb1cebd5fddad6292e0625daf29d4be01"
@@ -195,7 +195,7 @@
             "markers": "python_version >= '3.5'",
             "version": "==3.3"
         },
-        "importlib-meta***REMOVED***": {
+        "importlib-metadata": {
             "hashes": [
                 "sha256:637245b8bab2b6502fcbc752cc4b7a6f6243bb02b31c5c26156ad103d3d45670",
                 "sha256:7401a975809ea1fdc658c3aa4f78cc2195a0e019c5cbc4c06122884e9ae80c23"

@@ -25,7 +25,7 @@ resource null_resource ecr_image {
 }
 
 // Wait for the image to be uploaded, before lambda config runs
-***REMOVED*** aws_ecr_image lambda_image {
+data aws_ecr_image lambda_image {
  depends_on = [
    null_resource.ecr_image
  ]
@@ -34,5 +34,5 @@ resource null_resource ecr_image {
 }
 
 output "image_uri" {
-  value     = "${aws_ecr_repository.repo.repository_url}:${***REMOVED***.aws_ecr_image.lambda_image.image_tag}"
+  value     = "${aws_ecr_repository.repo.repository_url}:${data.aws_ecr_image.lambda_image.image_tag}"
 }

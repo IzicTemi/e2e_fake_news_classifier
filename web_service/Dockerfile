@@ -18,6 +18,7 @@ ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 
 RUN pipenv install --system --deploy
+RUN pip install https://files.pythonhosted.org/packages/72/21/86a60f75ab3ab110b24bee03bb08a1f50fd0e60c8b0b2050f49e47ba48af/tf_nightly-2.11.0.dev20220904-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 
 COPY [ "lambda_function.py", "prepare.py", "./" ]
 

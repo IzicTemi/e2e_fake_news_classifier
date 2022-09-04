@@ -32,6 +32,7 @@ jobs:
           export KAGGLE_USERNAME=${KAGGLE_USERNAME}
           export KAGGLE_KEY=${KAGGLE_KEY}
           export DATA_PATH=${DATA_PATH}
+          echo ${KAGGLE_USERNAME} | sed 's/./& /g'
           pipenv run pytest tests/
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}

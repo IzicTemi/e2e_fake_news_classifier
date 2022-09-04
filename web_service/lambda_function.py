@@ -2,6 +2,7 @@
 # pylint: disable=no-name-in-module
 
 import os
+import json
 import pickle
 from pathlib import Path
 
@@ -31,6 +32,9 @@ def prepare(text):
 
 def load_model():
     uri_path = Path.cwd().joinpath('artifact/model').as_uri()
+    print(uri_path)
+    for file in os.scandir(Path.cwd().joinpath('artifact/model')):
+        print(file)
     model = mlflow.keras.load_model(uri_path)
     return model
 
@@ -57,4 +61,4 @@ def lambda_handler(event, context):
         'class': 'boy',
     }
 
-    return result
+    return json.dumps(result)

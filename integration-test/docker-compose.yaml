@@ -3,10 +3,3 @@ services:
     image: ${LOCAL_IMAGE_NAME}
     ports:
       - "8080:8080"
-    environment:
-      - MLFLOW_TRACKING_URI="***REMOVED***"
-      - MLFLOW_TRACKING_USERNAME="***REMOVED***"
-      - MLFLOW_TRACKING_PASSWORD="***REMOVED***"
-      - AWS_SECRET_ACCESS_KEY="***REMOVED***"
-      - AWS_ACCESS_KEY_ID="***REMOVED***"
-      - AWS_DEFAULT_REGION=us-east-1

@@ -10,3 +10,4 @@ __pycache__/
 **terraform.tfstate*
 old-tran.py
 passwords.txt
+**set_env.sh

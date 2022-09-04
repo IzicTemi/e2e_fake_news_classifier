@@ -49,7 +49,7 @@ jobs:
       - name: Integration Test
         working-directory: 'integration-test'
         run: |
-          . run.sh
+          ./run.sh
 
   tf-plan:
     runs-on: ubuntu-latest

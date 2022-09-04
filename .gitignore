@@ -9,3 +9,4 @@ __pycache__/
 **.terraform.lock*
 **terraform.tfstate*
 old-tran.py
+passwords.txt

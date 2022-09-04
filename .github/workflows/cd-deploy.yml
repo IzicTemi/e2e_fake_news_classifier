@@ -51,8 +51,16 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}
-          IMAGE_TAG: "latest"   # ${{ github.sha }}
+          IMAGE_TAG: "latest"
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
         run: |
-          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} .
+          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
+            --build-arg MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI \
+            --build-arg MLFLOW_TRACKING_USERNAME=$MLFLOW_TRACKING_USERNAME \
+            --build-arg MLFLOW_TRACKING_PASSWORD=$MLFLOW_TRACKING_PASSWORD \
+            --build-arg AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+            --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image_uri::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"

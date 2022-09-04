@@ -1,0 +1,83 @@
+name: CI-Tests
+on:
+  pull_request:
+    branches:
+      - 'develop'
+    # paths:
+    #   - '06-best-practices/**'
+
+env:
+  AWS_DEFAULT_REGION: 'us-east-1'
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+  KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+  DATA_PATH: 'data'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: pip install pipenv && pipenv install --dev
+
+      - name: Run Unit tests
+        run: |
+          export KAGGLE_USERNAME=${KAGGLE_USERNAME}
+          export KAGGLE_KEY=${KAGGLE_KEY}
+          export DATA_PATH=${DATA_PATH}
+          pipenv run pytest tests/
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          DATA_PATH: 'data'
+
+      - name: Lint
+        run: pipenv run pylint --recursive=y .
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Integration Test
+        working-directory: 'integration-test'
+        run: |
+          export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+          export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+          export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
+          export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+          export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+          ./run.sh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+
+  tf-plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - uses: hashicorp/setup-terraform@v2
+      - name: TF plan
+        id: plan
+        working-directory: 'infrastructure'
+        run: |
+          terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file vars/prod.tfvars

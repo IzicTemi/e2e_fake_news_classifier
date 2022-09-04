@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+mlflow = "==1.28.0"
+optuna = "==2.10"
+nltk = "*"
+numpy = "*"
+pandas = "*"
+sklearn = "*"
+beautifulsoup4 = "*"
+kaggle = "*"
+prefect = "==2.0b8"
+boto3 = "*"
+
+[dev-packages]
+ipykernel = "*"
+pre-commit = "*"
+black = "*"
+isort = "*"
+pytest = "*"
+pylint = "*"
+deepdiff = "*"
+pytest-dotenv = "*"
+requests = "*"
+
+[requires]
+python_version = "3.9"

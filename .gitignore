@@ -1,0 +1,13 @@
+data/
+artifact/
+**/artifacts/
+**/models/
+**.vscode/
+__pycache__/
+**.env
+**.terraform/
+**.terraform.lock*
+**terraform.tfstate*
+old-tran.py
+passwords.txt
+scripts/set_env.sh

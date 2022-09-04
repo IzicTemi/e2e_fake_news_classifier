@@ -1,0 +1,107 @@
+name: CD-Deploy
+on:
+  push:
+    branches:
+      - 'develop'
+  #  paths:
+  #    - '06-best-practices/code/**'
+env:
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-east-1"
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      # Define the infrastructure
+      - name: TF plan
+        id: tf-plan
+        working-directory: 'infrastructure'
+        run: |
+          terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file=vars/prod.tfvars
+
+      - name: TF Apply
+        id: tf-apply
+        working-directory: 'infrastructure'
+        if: ${{ steps.tf-plan.outcome }} == 'success'
+        run: |
+          terraform apply -auto-approve -var-file=vars/prod.tfvars
+          echo "::set-output name=ecr_repo::$(terraform output ecr_repo | xargs)"
+          echo "::set-output name=model_bucket::$(terraform output model_bucket | xargs)"
+          echo "::set-output name=lambda_function::$(terraform output lambda_function | xargs)"
+          echo "::set-output name=lambda_rest_api_url::$(terraform output lambda_rest_api_url | xargs)"
+
+      # Build-Push
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image-step
+        working-directory: 'web_service'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}
+          IMAGE_TAG: "latest"
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+        run: |
+          export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+          export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+          export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
+          export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+          export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+          docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
+            --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
+            --build-arg MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME} \
+            --build-arg MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD} \
+            --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+            --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image_uri::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      # Deploy
+      - name: Update function container
+        id: deploy-step
+        env:
+          LAMBDA_FUNCTION: ${{ steps.tf-apply.outputs.lambda_function }}
+          IMAGE_URI: ${{ steps.build-image-step.outputs.image_uri }}
+          URL: ${{ steps.tf-apply.outputs.lambda_rest_api_url }}
+        run: |
+          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+              while [[ "$STATE" == "InProgress" ]]
+              do
+                  echo "sleep 5sec ...."
+                  sleep 5s
+                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+                  echo $STATE
+              done
+
+          aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $IMAGE_URI
+
+          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+              while [[ "$STATE" == "InProgress" ]]
+              do
+                  echo "sleep 5sec ...."
+                  sleep 5s
+                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+                  echo $STATE
+              done
+
+          echo "Successfully updated Lambda Function. Test by sending a POST request to at $URL"

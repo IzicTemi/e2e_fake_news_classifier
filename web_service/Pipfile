@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+mlflow = "==1.27.0"
+numpy = "*"
+sklearn = "*"
+gunicorn = "*"
+boto3 = "*"
+
+[dev-packages]
+requests = "*"
+
+[requires]
+python_version = "3.9"

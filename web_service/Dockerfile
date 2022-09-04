@@ -1,0 +1,27 @@
+FROM public.ecr.aws/lambda/python:3.9-x86_64
+
+RUN pip install -U pip
+RUN pip install pipenv
+
+COPY [ "Pipfile", "Pipfile.lock", "./" ]
+
+ARG MLFLOW_TRACKING_URI
+ARG MLFLOW_TRACKING_USERNAME
+ARG MLFLOW_TRACKING_PASSWORD
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_ACCESS_KEY_ID
+
+ENV MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+ENV MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
+ENV MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
+ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+
+RUN pipenv install --system --deploy
+RUN pip install tf-nightly -q
+
+COPY [ "lambda_function.py", "prepare.py", "./" ]
+
+RUN [ "python", "prepare.py"]
+
+CMD [ "lambda_function.lambda_handler" ]

@@ -15,15 +15,6 @@ env:
   DATA_PATH: '***REMOVED***'
 
 jobs:
-  allow_ssh:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup upterm session
-      uses: lhotari/action-upterm@v1
-      with:
-        limit-access-to-actor: true
-        limit-access-to-users: ${{ github.actor }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -37,18 +28,11 @@ jobs:
         run: pip install pipenv && pipenv install --dev
 
       - name: Run Unit tests
-        run: |
-          KAGGLE_USERNAME=${{ env.KAGGLE_USERNAME }}
-          KAGGLE_USERNAME="${KAGGLE_USERNAME%\"}"
-          KAGGLE_USERNAME="${KAGGLE_USERNAME#\"}"
-          KAGGLE_KEY=${{ env.KAGGLE_KEY }}
-          KAGGLE_KEY="${KAGGLE_KEY%\"}"
-          KAGGLE_KEY="${KAGGLE_KEY#\"}"
-          touch .env
-          echo "KAGGLE_USERNAME = $KAGGLE_USERNAME" > .env
-          echo "KAGGLE_KEY = $KAGGLE_KEY" >> .env
-          echo "DATA_PATH = ${{ env.DATA_PATH }}" >> .env
-          pipenv run pytest tests/
+        run: pipenv run pytest tests/
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          DATA_PATH: '***REMOVED***'
 
       - name: Lint
         run: pipenv run pylint --recursive=y .

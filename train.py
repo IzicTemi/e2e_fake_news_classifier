@@ -492,11 +492,13 @@ def main():
     max_features = 10000
     maxlen = 300
 
-    path = "./***REMOVED***"
+    path = os.getenv("DATA_PATH")
     ***REMOVED***frame = read_***REMOVED***(path)
     x_train, x_test, y_train, y_test = clean_split_***REMOVED***(***REMOVED***frame)
     print("Tokenizing... ")
     x_train, x_test, tokenizer = tokenize(x_train, x_test, max_features, maxlen)
+
+    Path("./save").mkdir(parents=True, exist_ok=True)
 
     with open('./save/tokenizer.bin', 'wb') as f_out:
         pickle.dump(tokenizer, f_out)

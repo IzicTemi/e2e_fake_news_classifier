@@ -31,8 +31,8 @@ from tensorflow.keras.preprocessing import text, sequence
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
-def read_***REMOVED***(path):
-    print('Loading ***REMOVED***... ')
+def read_data(path):
+    print('Loading data... ')
     true = pd.read_csv(f"{path}/True.csv")
     false = pd.read_csv(f"{path}/Fake.csv")
     print('Loaded ')
@@ -40,7 +40,7 @@ def read_***REMOVED***(path):
     true['category'] = 1
     false['category'] = 0
 
-    df = pd.concat([true, false])  # Merging the 2 ***REMOVED***sets
+    df = pd.concat([true, false])  # Merging the 2 datasets
 
     df['text'] = df['title'] + "\n" + df['text']
     del df['title']
@@ -78,7 +78,7 @@ def denoise_text(text):
     return text
 
 
-def clean_split_***REMOVED***(df):
+def clean_split_data(df):
     print(":split")
     df['text'] = df['text'].apply(denoise_text)
     x_train, x_test, y_train, y_test = train_test_split(
@@ -180,12 +180,12 @@ def objective(
     # Generate our trial model.
     model = create_lstm_model(trial, max_features, embed_size, embedding_matrix, maxlen)
 
-    # Fit the model on the training ***REMOVED***.
+    # Fit the model on the training data.
     model.fit(
         x_train,
         y_train,
         batch_size=batch_size,
-        validation_***REMOVED***=(X_test, y_test),
+        validation_data=(X_test, y_test),
         epochs=epochs,
         callbacks=[TFKerasPruningCallback(trial, "val_loss")],
     )
@@ -293,7 +293,7 @@ def train_best_model(
             x_train,
             y_train,
             batch_size=batch_size,
-            validation_***REMOVED***=(x_test, y_test),
+            validation_data=(x_test, y_test),
             epochs=epochs,
             callbacks=[learning_rate_reduction],
         )
@@ -492,9 +492,9 @@ def main():
     max_features = 10000
     maxlen = 300
 
-    path = "./***REMOVED***"
-    ***REMOVED***frame = read_***REMOVED***(path)
-    x_train, x_test, y_train, y_test = clean_split_***REMOVED***(***REMOVED***frame)
+    path = "./data"
+    dataframe = read_data(path)
+    x_train, x_test, y_train, y_test = clean_split_data(dataframe)
     print("Tokenizing... ")
     x_train, x_test, tokenizer = tokenize(x_train, x_test, max_features, maxlen)
 

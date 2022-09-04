@@ -3,7 +3,7 @@ import os
 # import sys
 from pathlib import Path
 
-import get_***REMOVED***
+import get_data
 
 # lambda_function_path = str(Path.cwd().parent.absolute().joinpath('web_service'))
 
@@ -14,15 +14,15 @@ import get_***REMOVED***
 # classify("ball")
 
 
-def test_get_***REMOVED***():
-    DATA_PATH = get_***REMOVED***.DATA_PATH
+def test_get_data():
+    DATA_PATH = get_data.DATA_PATH
     Path(DATA_PATH).mkdir(parents=True, exist_ok=True)
-    ***REMOVED***set = 'tarundalal/100-richest-people-in-world'
-    get_***REMOVED***.download_***REMOVED***set(***REMOVED***set)
+    dataset = 'tarundalal/100-richest-people-in-world'
+    get_data.download_dataset(dataset)
     assert '100-richest-people-in-world.zip' in os.listdir(DATA_PATH)
-    get_***REMOVED***.unzip()
+    get_data.unzip()
     assert 'TopRichestInWorld.csv' in os.listdir(DATA_PATH)
-    get_***REMOVED***.del_zip()
+    get_data.del_zip()
     assert '100-richest-people-in-world.zip' not in os.listdir(DATA_PATH)
 
 

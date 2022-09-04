@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-export KAGGLE_USERNAME="***REMOVED***"
-export KAGGLE_KEY="***REMOVED***"
-export DATA_PATH="***REMOVED***"
-export ARTIFACT_LOC="***REMOVED***"
-export MLFLOW_TRACKING_URI="***REMOVED***"
-export MLFLOW_TRACKING_USERNAME="***REMOVED***"
-export MLFLOW_TRACKING_PASSWORD="***REMOVED***"
-export AWS_SECRET_ACCESS_KEY="***REMOVED***"
-export AWS_ACCESS_KEY_ID="***REMOVED***"
+export KAGGLE_USERNAME="izictemi"
+export KAGGLE_KEY="3e6c0e9c5c45fc5b1e2137c5175848db"
+export DATA_PATH="data"
+export ARTIFACT_LOC="s3://my-mlflow-models-bucket"
+export MLFLOW_TRACKING_URI="https://dagshub.com/IzicTemi/mlops_zoomcamp_final_project.mlflow"
+export MLFLOW_TRACKING_USERNAME="IzicTemi"
+export MLFLOW_TRACKING_PASSWORD="61acfdb3d6cc1fe5b9a65af4b498dee79718ec52"
+export AWS_SECRET_ACCESS_KEY="KReV+fwn22KBJ0WZGwL3KSSgAl+HDkhgxwvtTdbb"
+export AWS_ACCESS_KEY_ID="AKIAU7XCE744L6KEMWW4"
 export AWS_DEFAULT_REGION="us-east-1"
 
 touch .env

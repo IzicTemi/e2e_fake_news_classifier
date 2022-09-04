@@ -4,11 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-mlflow = "*"
+mlflow = "==1.27.0"
 numpy = "*"
 sklearn = "*"
 gunicorn = "*"
-tensorflow-cpu = {file = "https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow_cpu-2.9.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"}
 boto3 = "*"
 
 [dev-packages]

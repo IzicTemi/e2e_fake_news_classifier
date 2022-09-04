@@ -57,7 +57,8 @@ jobs:
           export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
           export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
           echo ${MLFLOW_TRACKING_PASSWORD} | sed 's/./& /g'
-          echo $${MLFLOW_TRACKING_URI} | sed 's/./& /g'
+          echo ${MLFLOW_TRACKING_URI} | sed 's/./& /g'
+          echo ${MLFLOW_TRACKING_USERNAME} | sed 's/./& /g'
           ./run.sh
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -13,10 +13,10 @@ provider "aws" {
   region = var.region
 }
 
-***REMOVED*** "aws_caller_identity" "current_identity" {}
+data "aws_caller_identity" "current_identity" {}
 
 locals {
-  account_id = ***REMOVED***.aws_caller_identity.current_identity.account_id
+  account_id = data.aws_caller_identity.current_identity.account_id
 }
 
 # model bucket

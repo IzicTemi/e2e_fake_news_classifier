@@ -12,7 +12,7 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
   KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-  DATA_PATH: '***REMOVED***'
+  DATA_PATH: 'data'
 
 jobs:
   test:
@@ -36,7 +36,7 @@ jobs:
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
-          DATA_PATH: '***REMOVED***'
+          DATA_PATH: 'data'
 
       - name: Lint
         run: pipenv run pylint --recursive=y .

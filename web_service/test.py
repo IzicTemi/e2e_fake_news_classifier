@@ -10,6 +10,6 @@ event = {
     'text': text,
 }
 
-url = 'https://3xodq9dxp4.execute-api.us-east-1.amazonaws.com/testing/classify'
+url = ''
 response = requests.post(url, json=event, timeout=300).json()
 print(response)

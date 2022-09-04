@@ -63,6 +63,8 @@ jobs:
         id: build-image-step
         working-directory: 'web_service'
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}
           IMAGE_TAG: "latest"
@@ -70,8 +72,11 @@ jobs:
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
         run: |
-          echo ${MLFLOW_TRACKING_URI} | sed 's/./& /g'
-          echo ${MLFLOW_TRACKING_USERNAME} | sed 's/./& /g'
+          export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+          export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+          export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
+          export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+          export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAM
           docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
             --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
             --build-arg MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME} \

@@ -18,3 +18,8 @@ docker build -t $LOCAL_IMAGE_NAME ../web_service \
     --build-arg AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 
 pip install tf-nightly
+
+Local image name in makefile
+
+FIrst run
+source scripts/set_env.sh

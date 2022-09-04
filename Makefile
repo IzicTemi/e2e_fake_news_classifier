@@ -1,5 +1,5 @@
 LOCAL_TAG:=$(shell date +"%Y-%m-%d-%H")
-LOCAL_IMAGE_NAME:=fake-news-classifier:${LOCAL_TAG}
+LOCAL_IMAGE_NAME:=${REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}
 SHELL:=/bin/bash
 
 test:
@@ -11,10 +11,15 @@ quality_checks:
 	pylint --recursive=y .
 
 build: quality_checks test
-	cd web_service && docker build -t ${LOCAL_IMAGE_NAME} .
+	cd web_service && bash ./run.sh
 
 integration_test: build
 	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integration-test/run.sh
+
+publish: integration_test
+	cd infrastructure && terraform apply -var-file=vars/prod.tfvars
+	LAMBDA_FUNCTION=$(shell cd infrastructure && terraform output lambda_function)\
+    LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
 
 setup:
 	pipenv install --dev

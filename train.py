@@ -21,6 +21,7 @@ import tensorflow as tf
 from bs4 import BeautifulSoup
 from prefect import flow, task, get_run_logger
 from nltk.corpus import stopwords
+from pandarallel import pandarallel
 from mlflow.entities import ViewType
 from mlflow.tracking import MlflowClient
 from optuna.integration import TFKerasPruningCallback
@@ -82,9 +83,10 @@ def denoise_text(text):
 
 @task
 def clean_split_data(df):
+    pandarallel.initialize()
     logger = get_run_logger()
-    logger.info("Cleaning and Splitting the Dataframe")
-    df['text'] = df['text'].apply(denoise_text)
+    logger.info("Cleaning and Splitting the Data")
+    df['text'] = df['text'].parallel_apply(denoise_text)
     x_train, x_test, y_train, y_test = train_test_split(
         df.text, df.category, random_state=0
     )
@@ -262,6 +264,8 @@ def train_best_model(
     embedding_matrix,
     maxlen,
 ):
+    logger = get_run_logger()
+    logger.info("Starting optimzation Study")
     learning_rate_reduction = ReduceLROnPlateau(
         monitor='val_accuracy', patience=2, verbose=1, factor=0.5, min_lr=0.00001
     )
@@ -315,8 +319,9 @@ def train_best_model(
 
 @task
 def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
-
+    # pylint: disable=too-many-statements
     logger = get_run_logger()
+    logger.info("Checking run and Registering best model to Production")
     client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
     experiment = client.get_experiment_by_name(EXPT_NAME)
     runs = client.search_runs(
@@ -506,7 +511,6 @@ def main():
     )
     embedding_matrix = embedding_matrix_future.result()
 
-    logger.info("Starting optimzation Study")
     train_future = train.submit(
         x_train,
         y_train,
@@ -522,7 +526,6 @@ def main():
         wait_for=[tokenizer_future, embedding_matrix_future],
     )
 
-    logger.info("Checking run and Registering best model to Production")
     register_best_model.submit(
         EXPT_NAME, MLFLOW_TRACKING_URI, model_name, wait_for=[train_future]
     )

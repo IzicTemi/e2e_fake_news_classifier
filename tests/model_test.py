@@ -28,6 +28,7 @@ def test_get_data():
     assert 'TopRichestInWorld.csv' in os.listdir(DATA_PATH)
     get_data.del_zip.submit(wait_for=[unzip_ft])
     assert '100-richest-people-in-world.zip' not in os.listdir(DATA_PATH)
+    os.remove(f"{DATA_PATH}/TopRichestInWorld.csv")
 
 
 # class ModelMock:

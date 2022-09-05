@@ -12,8 +12,9 @@ pandas = "*"
 sklearn = "*"
 beautifulsoup4 = "*"
 kaggle = "*"
-prefect = "==2.0b8"
+prefect = "==2.0b10"
 boto3 = "*"
+protobuf = "~=3.19"
 
 [dev-packages]
 ipykernel = "*"

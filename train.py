@@ -19,6 +19,7 @@ import optuna
 import pandas as pd
 import tensorflow as tf
 from bs4 import BeautifulSoup
+from prefect import flow, task
 from nltk.corpus import stopwords
 from mlflow.entities import ViewType
 from mlflow.tracking import MlflowClient
@@ -31,6 +32,7 @@ from tensorflow.keras.preprocessing import text, sequence
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 
+@task
 def read_data(path):
     print('Loading data... ')
     true = pd.read_csv(f"{path}/True.csv")
@@ -78,6 +80,7 @@ def denoise_text(text):
     return text
 
 
+@task
 def clean_split_data(df):
     print(":split")
     df['text'] = df['text'].apply(denoise_text)
@@ -88,6 +91,7 @@ def clean_split_data(df):
     return x_train, x_test, y_train, y_test
 
 
+@task
 def tokenize(x_train, x_test, max_features, maxlen):
     tokenizer = text.Tokenizer(num_words=max_features)
     tokenizer.fit_on_texts(x_train)
@@ -102,6 +106,7 @@ def get_coefs(word, *arr):
     return word, np.asarray(arr, dtype='float32')
 
 
+@task
 def get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features):
     with open(EMBEDDING_FILE, 'r', encoding='utf8') as f_out:
         embeddings_index = dict(get_coefs(*o.rstrip().rsplit(' ')) for o in f_out)
@@ -200,6 +205,7 @@ def objective(
     return score[1]
 
 
+@task
 def train(
     x_train,
     y_train,
@@ -301,6 +307,7 @@ def train_best_model(
     return model
 
 
+@task
 def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
 
     client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
@@ -438,6 +445,7 @@ def load_best_model(MLFLOW_TRACKING_URI, model_name):
     return model
 
 
+@flow
 def main():
 
     parser = argparse.ArgumentParser()
@@ -493,10 +501,14 @@ def main():
     maxlen = 300
 
     path = os.getenv("DATA_PATH")
-    dataframe = read_data(path)
-    x_train, x_test, y_train, y_test = clean_split_data(dataframe)
+    dataframe_future = read_data.submit(path)
+    split_future = clean_split_data.submit(dataframe_future)
+    x_train, x_test, y_train, y_test = split_future.result()
     print("Tokenizing... ")
-    x_train, x_test, tokenizer = tokenize(x_train, x_test, max_features, maxlen)
+    tokenizer_future = tokenize.submit(
+        x_train, x_test, max_features, maxlen, wait_for=[split_future]
+    )
+    x_train, x_test, tokenizer = tokenizer_future.result()
 
     Path("./save").mkdir(parents=True, exist_ok=True)
 
@@ -505,10 +517,13 @@ def main():
 
     print("Creating glove embedding matrix... ")
     EMBEDDING_FILE = f'{path}/glove.twitter.27B.100d.txt'
-    embedding_matrix = get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features)
+    embedding_matrix_future = get_glove_embedding.submit(
+        EMBEDDING_FILE, tokenizer, max_features
+    )
+    embedding_matrix = embedding_matrix_future.result()
 
     print("Starting optimzation Study")
-    train(
+    train_future = train.submit(
         x_train,
         y_train,
         batch_size,
@@ -520,10 +535,13 @@ def main():
         embedding_matrix,
         maxlen,
         no_evals,
+        wait_for=[tokenizer_future, embedding_matrix_future],
     )
 
     print("Checking run and Registering best model to Production")
-    register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name)
+    register_best_model.submit(
+        EXPT_NAME, MLFLOW_TRACKING_URI, model_name, wait_for=[train_future]
+    )
 
     if testing == 'y':
         print("Loading model for testing... ")

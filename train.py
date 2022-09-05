@@ -19,7 +19,7 @@ import optuna
 import pandas as pd
 import tensorflow as tf
 from bs4 import BeautifulSoup
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 from nltk.corpus import stopwords
 from mlflow.entities import ViewType
 from mlflow.tracking import MlflowClient
@@ -34,10 +34,10 @@ from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 @task
 def read_data(path):
-    print('Loading data... ')
+    logger = get_run_logger()
+    logger.info("Loading data... ")
     true = pd.read_csv(f"{path}/True.csv")
     false = pd.read_csv(f"{path}/Fake.csv")
-    print('Loaded ')
 
     true['category'] = 1
     false['category'] = 0
@@ -48,7 +48,7 @@ def read_data(path):
     del df['title']
     del df['subject']
     del df['date']
-    print('df done')
+    logger.info("Successful!")
     return df
 
 
@@ -82,23 +82,27 @@ def denoise_text(text):
 
 @task
 def clean_split_data(df):
-    print(":split")
+    logger = get_run_logger()
+    logger.info("Cleaning and Splitting the Dataframe")
     df['text'] = df['text'].apply(denoise_text)
     x_train, x_test, y_train, y_test = train_test_split(
         df.text, df.category, random_state=0
     )
-
+    logger.info("Done")
     return x_train, x_test, y_train, y_test
 
 
 @task
 def tokenize(x_train, x_test, max_features, maxlen):
+    logger = get_run_logger()
+    logger.info("Tokenizing... ")
     tokenizer = text.Tokenizer(num_words=max_features)
     tokenizer.fit_on_texts(x_train)
     tokenized_train = tokenizer.texts_to_sequences(x_train)
     x_train = sequence.pad_sequences(tokenized_train, maxlen=maxlen)
     tokenized_test = tokenizer.texts_to_sequences(x_test)
     X_test = sequence.pad_sequences(tokenized_test, maxlen=maxlen)
+    logger.info("Done")
     return x_train, X_test, tokenizer
 
 
@@ -108,6 +112,8 @@ def get_coefs(word, *arr):
 
 @task
 def get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features):
+    logger = get_run_logger()
+    logger.info("Creating glove embedding matrix... ")
     with open(EMBEDDING_FILE, 'r', encoding='utf8') as f_out:
         embeddings_index = dict(get_coefs(*o.rstrip().rsplit(' ')) for o in f_out)
     all_embs = np.stack(embeddings_index.values())
@@ -125,7 +131,7 @@ def get_glove_embedding(EMBEDDING_FILE, tokenizer, max_features):
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
             embedding_matrix[i] = embedding_vector
-
+    logger.info("Done")
     return embedding_matrix
 
 
@@ -310,6 +316,7 @@ def train_best_model(
 @task
 def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
 
+    logger = get_run_logger()
     client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
     experiment = client.get_experiment_by_name(EXPT_NAME)
     runs = client.search_runs(
@@ -330,7 +337,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
         prod_acc = client.get_metric_history(prod_run_id, 'val_accuracy')[0].value
         run_acc = client.get_metric_history(cur_run_id, 'val_accuracy')[0].value
         if run_acc > prod_acc:
-            print('Registering new model to Production ...')
+            logger.info('Registering new model to Production ...')
             mlflow.register_model(
                 model_uri=f"runs:/{cur_run_id}/model", name=model_name
             )
@@ -342,7 +349,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 stage="Production",
                 archive_existing_versions=False,
             )
-            print('Moving previous model to Staging ...')
+            logger.info('Moving previous model to Staging ...')
             client.transition_model_version_stage(
                 name=model_name,
                 version=prod_ver.version,
@@ -356,7 +363,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
             stag_run_id = stag_ver.run_id
             stag_acc = client.get_metric_history(stag_run_id, 'val_accuracy')[0].value
             if run_acc > stag_acc:
-                print('Registering new model to Staging ...')
+                logger.info('Registering new model to Staging ...')
                 mlflow.register_model(
                     model_uri=f"runs:/{cur_run_id}/model", name=model_name
                 )
@@ -375,7 +382,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                     archive_existing_versions=False,
                 )
         else:
-            print("Models in Production are better.")
+            logger.info("Models in Production are better.")
 
     elif (
         len(client.get_latest_versions(name=model_name, stages=["Production"])) == 0
@@ -386,7 +393,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
         stag_acc = client.get_metric_history(stag_run_id, 'val_accuracy')[0].value
         run_acc = client.get_metric_history(cur_run_id, 'val_accuracy')[0].value
         if run_acc > stag_acc:
-            print('Registering model to Production ...')
+            logger.info('Registering model to Production ...')
             mlflow.register_model(
                 model_uri=f"runs:/{cur_run_id}/model", name=model_name
             )
@@ -399,7 +406,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 archive_existing_versions=False,
             )
         else:
-            print(
+            logger.info(
                 'Promoting previous model to Production and Registering new model to Staging ...'
             )
             mlflow.register_model(
@@ -422,7 +429,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 archive_existing_versions=False,
             )
     else:
-        print('Registering new model to Production ...')
+        logger.info('Registering new model to Production ...')
         mlflow.register_model(model_uri=f"runs:/{cur_run_id}/model", name=model_name)
         client.transition_model_version_stage(
             name=model_name,
@@ -434,19 +441,10 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
         )
 
 
-def load_best_model(MLFLOW_TRACKING_URI, model_name):
-    client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
-    prod_version = client.get_latest_versions(name=model_name, stages=["Production"])[0]
-    run_id = prod_version.run_id
-
-    mlflow.artifacts.download_artifacts(run_id=run_id, dst_path='./artifact')
-    uri_path = Path.cwd().joinpath('artifact/model').as_uri()
-    model = mlflow.keras.load_model(uri_path)
-    return model
-
-
 @flow
 def main():
+
+    logger = get_run_logger()
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -456,32 +454,16 @@ def main():
         help="the number of parameter evaluations for the optimizer to explore.",
     )
     parser.add_argument(
-        "--epochs", type=int, default=5, help="the number of epochs to train the model"
-    )
-    parser.add_argument(
-        "--model_name",
-        type=str,
-        default='fake-news-detect',
-        help="the name to register models",
-    )
-    parser.add_argument(
-        "--test",
-        type=str,
-        default='n',
-        help="should the model be returned for testing? Enter 'y' or 'n' Default is 'n'",
+        "--epochs",
+        type=int,
+        default=5,
+        help="the number of epochs to train the model",
     )
 
     args = parser.parse_args()
-    no_evals, epochs, model_name, testing = (
-        args.n_evals,
-        args.epochs,
-        args.model_name,
-        args.test,
-    )
-
-    print(f"No of optimization trials {no_evals}")
-    print(f"Training for {epochs} epochs")
-    print(f"Models would be registered to {model_name}")
+    no_evals, epochs = (args.n_evals, args.epochs)
+    logger.info(f"No of optimization trials {no_evals}")
+    logger.info(f"Training for {epochs} epochs")
 
     nltk.download('stopwords')
 
@@ -490,11 +472,13 @@ def main():
     EXPT_NAME = f'final-goal-{timer}'
     MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
     ART_LOC = os.environ['ARTIFACT_LOC']
+    model_name = os.environ['MODEL_NAME']
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.create_experiment(EXPT_NAME, artifact_location=ART_LOC)
     mlflow.set_experiment(EXPT_NAME)
     mlflow.tensorflow.autolog()
 
+    logger.info(f"Models will be registered to {model_name}")
     batch_size = 256
     embed_size = 100
     max_features = 10000
@@ -504,7 +488,7 @@ def main():
     dataframe_future = read_data.submit(path)
     split_future = clean_split_data.submit(dataframe_future)
     x_train, x_test, y_train, y_test = split_future.result()
-    print("Tokenizing... ")
+
     tokenizer_future = tokenize.submit(
         x_train, x_test, max_features, maxlen, wait_for=[split_future]
     )
@@ -514,15 +498,15 @@ def main():
 
     with open('./save/tokenizer.bin', 'wb') as f_out:
         pickle.dump(tokenizer, f_out)
+    logger.info("Successfully saved the Tokenizer")
 
-    print("Creating glove embedding matrix... ")
     EMBEDDING_FILE = f'{path}/glove.twitter.27B.100d.txt'
     embedding_matrix_future = get_glove_embedding.submit(
         EMBEDDING_FILE, tokenizer, max_features
     )
     embedding_matrix = embedding_matrix_future.result()
 
-    print("Starting optimzation Study")
+    logger.info("Starting optimzation Study")
     train_future = train.submit(
         x_train,
         y_train,
@@ -538,16 +522,10 @@ def main():
         wait_for=[tokenizer_future, embedding_matrix_future],
     )
 
-    print("Checking run and Registering best model to Production")
+    logger.info("Checking run and Registering best model to Production")
     register_best_model.submit(
         EXPT_NAME, MLFLOW_TRACKING_URI, model_name, wait_for=[train_future]
     )
-
-    if testing == 'y':
-        print("Loading model for testing... ")
-        model = load_best_model(MLFLOW_TRACKING_URI, model_name)
-        print('Done')
-        return model, tokenizer
 
 
 if __name__ == "__main__":

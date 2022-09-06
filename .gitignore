@@ -14,3 +14,7 @@ scripts/set_env.sh
 save/
 *.ipynb
 *.db
+*.out
+*.err
+*.pem
+**/webserver_key*

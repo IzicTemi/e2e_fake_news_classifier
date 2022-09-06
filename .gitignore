@@ -12,4 +12,5 @@ old-tran.py
 passwords.txt
 scripts/set_env.sh
 save/
-testing.ipynb
+*.ipynb
+*.db

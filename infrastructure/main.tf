@@ -13,7 +13,7 @@ provider "aws" {
   region = var.region
 }
 
-data "aws_caller_iden0tity" "current_identity" {}
+data "aws_caller_identity" "current_identity" {}
 
 locals {
   account_id = data.aws_caller_identity.current_identity.account_id

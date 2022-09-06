@@ -1,5 +1,5 @@
 LOCAL_TAG:=$(shell date +"%Y-%m-%d-%H")
-LOCAL_IMAGE_NAME:=${REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}
+LOCAL_IMAGE_NAME:=${ECR_REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}
 SHELL:=/bin/bash
 
 test:
@@ -22,8 +22,10 @@ publish: integration_test
     LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
 
 setup:
+	pip install -U pip
 	pipenv install --dev
+	pip install tf-nightly
 	pre-commit install
 
 create-bucket:
-	cd infrastructure && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
+	cd infrastructure && terraform init && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars

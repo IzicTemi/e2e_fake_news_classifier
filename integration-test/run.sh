@@ -6,7 +6,7 @@ fi
 
 if [ "${LOCAL_IMAGE_NAME}" == "" ]; then
     LOCAL_TAG=`date +"%Y-%m-%d-%H-%M"`
-    export LOCAL_IMAGE_NAME="${REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}"
+    export LOCAL_IMAGE_NAME="${ECR_REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}"
     echo "LOCAL_IMAGE_NAME is not set, building a new image with tag ${LOCAL_IMAGE_NAME}"
     docker build -t ${LOCAL_IMAGE_NAME} ../web_service \
     --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \

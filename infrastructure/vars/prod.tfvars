@@ -1,5 +1,5 @@
-model_bucket = "my-mlflow-models-buckets"
-ecr_repo_name = "prod-fake-news-detect"
-lambda_function_name = "prod-classify-lambda"
+model_bucket =
+ecr_repo_name = "placeholder_ecr_repo_name"
+lambda_function_name = "prod_classify_lambda"
 region = "us-east-1"
 project_id = "mlops-zoomcamp"

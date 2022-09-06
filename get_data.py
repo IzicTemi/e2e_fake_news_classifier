@@ -5,8 +5,6 @@ from pathlib import Path
 import kaggle
 from prefect import flow, task, get_run_logger
 
-# from prefect.task_runners import SequentialTaskRunner, ConcurrentTaskRunner
-
 KAGGLE_USERNAME = os.getenv("KAGGLE_USERNAME")
 KAGGLE_KEY = os.getenv("KAGGLE_KEY")
 

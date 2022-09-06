@@ -324,24 +324,37 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
     logger.info("Checking run and Registering best model to Production")
     client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
     experiment = client.get_experiment_by_name(EXPT_NAME)
+
+    # Get best run from current experiment
     runs = client.search_runs(
         experiment_ids=experiment.experiment_id,
         run_view_type=ViewType.ACTIVE_ONLY,
         max_results=1,
         order_by=["metrics.val_accuracy DESC"],
     )
+
+    # Get run id of best run
     cur_run_id = runs[0].info.run_id
+
+    # Get latest registered model versions
     try:
         client.get_latest_versions(name=model_name)
     except mlflow.exceptions.RestException:
-        client.create_registered_model(model_name)
+        client.create_registered_model(
+            model_name
+        )  # create registered model if not exist
 
-    if len(client.get_latest_versions(name=model_name, stages=["Production"])) != 0:
+    # Check if model currently in production
+    if (
+        len(client.get_latest_versions(name=model_name, stages=["Production"])) != 0
+    ):  # if yes, compare run val_accuracy to model val_accuracy
         prod_ver = client.get_latest_versions(name=model_name, stages=["Production"])[0]
         prod_run_id = prod_ver.run_id
         prod_acc = client.get_metric_history(prod_run_id, 'val_accuracy')[0].value
         run_acc = client.get_metric_history(cur_run_id, 'val_accuracy')[0].value
-        if run_acc > prod_acc:
+        if (
+            run_acc > prod_acc
+        ):  # if run better than production model, register new model and move to production
             logger.info('Registering new model to Production ...')
             mlflow.register_model(
                 model_uri=f"runs:/{cur_run_id}/model", name=model_name
@@ -354,20 +367,27 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 stage="Production",
                 archive_existing_versions=False,
             )
-            logger.info('Moving previous model to Staging ...')
+            logger.info(
+                'Moving previous model to Staging ...'
+            )  # move previous prod model to staging
             client.transition_model_version_stage(
                 name=model_name,
                 version=prod_ver.version,
                 stage="Staging",
                 archive_existing_versions=False,
             )
-        elif len(client.get_latest_versions(name=model_name, stages=["Staging"])) != 0:
+        # else if production better than run, check if model in staging
+        elif (
+            len(client.get_latest_versions(name=model_name, stages=["Staging"])) != 0
+        ):  # if yes, compare run val_accuracy to model val_accuracy
             stag_ver = client.get_latest_versions(name=model_name, stages=["Staging"])[
                 0
             ]
             stag_run_id = stag_ver.run_id
             stag_acc = client.get_metric_history(stag_run_id, 'val_accuracy')[0].value
-            if run_acc > stag_acc:
+            if (
+                run_acc > stag_acc
+            ):  # if run better than staging model, register new model and move to staging
                 logger.info('Registering new model to Staging ...')
                 mlflow.register_model(
                     model_uri=f"runs:/{cur_run_id}/model", name=model_name
@@ -380,24 +400,26 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                     stage="Staging",
                     archive_existing_versions=False,
                 )
-                client.transition_model_version_stage(
+                client.transition_model_version_stage(  # remove previous model from staging
                     name=model_name,
                     version=stag_ver.version,
                     stage="None",
                     archive_existing_versions=False,
                 )
-        else:
+        else:  # if models in production and staging are both better, do nothing
             logger.info("Models in Production are better.")
 
     elif (
         len(client.get_latest_versions(name=model_name, stages=["Production"])) == 0
         and len(client.get_latest_versions(name=model_name, stages=["Staging"])) != 0
-    ):
+    ):  # run if model not in production but in staging
         stag_ver = client.get_latest_versions(name=model_name, stages=["Staging"])[0]
         stag_run_id = stag_ver.run_id
         stag_acc = client.get_metric_history(stag_run_id, 'val_accuracy')[0].value
         run_acc = client.get_metric_history(cur_run_id, 'val_accuracy')[0].value
-        if run_acc > stag_acc:
+        if (
+            run_acc > stag_acc
+        ):  # if run better than staging model, register new model and move to production
             logger.info('Registering model to Production ...')
             mlflow.register_model(
                 model_uri=f"runs:/{cur_run_id}/model", name=model_name
@@ -410,7 +432,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 stage="Production",
                 archive_existing_versions=False,
             )
-        else:
+        else:  # promote model in staging to production if better than run
             logger.info(
                 'Promoting previous model to Production and Registering new model to Staging ...'
             )
@@ -425,7 +447,7 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 stage="Production",
                 archive_existing_versions=False,
             )
-            client.transition_model_version_stage(
+            client.transition_model_version_stage(  # register new run to staging
                 name=model_name,
                 version=client.get_latest_versions(name=model_name, stages=["None"])[
                     0
@@ -433,8 +455,10 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
                 stage="Staging",
                 archive_existing_versions=False,
             )
-    else:
-        logger.info('Registering new model to Production ...')
+    else:  # if no models in production and staging
+        logger.info(
+            'Registering new model to Production ...'
+        )  # register run to production
         mlflow.register_model(model_uri=f"runs:/{cur_run_id}/model", name=model_name)
         client.transition_model_version_stage(
             name=model_name,
@@ -467,7 +491,7 @@ def main():
 
     args = parser.parse_args()
     no_evals, epochs = (args.n_evals, args.epochs)
-    logger.info(f"No of optimization trials {no_evals}")
+    logger.info(f"No of optimization trials = {no_evals}")
     logger.info(f"Training for {epochs} epochs")
 
     nltk.download('stopwords')

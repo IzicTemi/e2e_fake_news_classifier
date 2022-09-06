@@ -58,4 +58,3 @@ output "ecr_repo" {
 output "lambda_rest_api_url" {
   value = module.lambda_function.base_url
 }
-0

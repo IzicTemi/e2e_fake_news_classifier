@@ -16,7 +16,6 @@ env:
 
 jobs:
   test:
-    needs: tf-plan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +64,7 @@ jobs:
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
           MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
-          ECR_REPO_NAME: ${{ needs.tf-plan.outputs.ecr_repo_name }}
+          ECR_REPO_NAME: 'prod-fake-news-detect-mlops-zoomcamp'
   tf-plan:
     runs-on: ubuntu-latest
     outputs:
@@ -85,4 +84,4 @@ jobs:
         working-directory: 'infrastructure'
         run: |
           terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file vars/prod.tfvars
-          echo "::set-output name=ecr_repo::$(terraform output ecr_repo | xargs)"
+          # echo "::set-output name=ecr_repo::$(terraform output ecr_repo | xargs)"

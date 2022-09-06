@@ -16,5 +16,3 @@ else
 fi
 
 docker run -it --rm -p 9696:9696 ${LOCAL_IMAGE_NAME}
-
-# pipenv run python test.py

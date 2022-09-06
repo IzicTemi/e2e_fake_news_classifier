@@ -8,7 +8,8 @@ disable = [
     "invalid-name",
     "too-few-public-methods",
     "inconsistent-return-statements",
-    "redefined-outer-name"
+    "redefined-outer-name",
+    "duplicate-code"
 ]
 
 [tool.black]

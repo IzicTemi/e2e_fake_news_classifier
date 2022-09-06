@@ -28,7 +28,7 @@ setup:
 	pre-commit install
 
 create-bucket:
-	cd infrastructure && terraform init && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
+	cd infrastructure && terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
 
 setup_tf_vars:
 	sed -i "s/model_bucket.*/model_bucket = \"${MODEL_BUCKET}\"/g" infrastructure/vars/prod.tfvars && \

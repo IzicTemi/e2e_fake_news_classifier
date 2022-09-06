@@ -13,7 +13,7 @@ provider "aws" {
   region = var.region
 }
 
-data "aws_caller_identity" "current_identity" {}
+data "aws_caller_iden0tity" "current_identity" {}
 
 locals {
   account_id = data.aws_caller_identity.current_identity.account_id
@@ -58,3 +58,4 @@ output "ecr_repo" {
 output "lambda_rest_api_url" {
   value = module.lambda_function.base_url
 }
+0

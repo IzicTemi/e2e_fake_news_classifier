@@ -31,7 +31,7 @@ create-bucket:
 	cd infrastructure && terraform init && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
 
 setup_tf_vars:
-	sed -i "s/model_bucket.*/model_bucket = ${MODEL_BUCKET}/g" infrastructure/vars/prod.tfvars && \
-	sed -i "s/ecr_repo_name.*/ecr_repo_name = ${ECR_REPO_NAME}/g" infrastructure/vars/prod.tfvars && \
-	sed -i "s/project_id.*/project_id = ${PROJECT_ID}/g" infrastructure/vars/prod.tfvars && \
+	sed -i "s/model_bucket.*/model_bucket = \"${MODEL_BUCKET}\"/g" infrastructure/vars/prod.tfvars && \
+	sed -i "s/ecr_repo_name.*/ecr_repo_name = \"${ECR_REPO_NAME}\"/g" infrastructure/vars/prod.tfvars && \
+	sed -i "s/project_id.*/project_id = \"${PROJECT_ID}\"/g" infrastructure/vars/prod.tfvars && \
 	sed -i "5s/bucket.*/bucket = \"${TFSTATE_BUCKET}\"/g" infrastructure/main.tf

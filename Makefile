@@ -1,5 +1,5 @@
 LOCAL_TAG:=$(shell date +"%Y-%m-%d-%H")
-LOCAL_IMAGE_NAME:=${ECR_REPO_NAME}-${PROJECT_ID}:${LOCAL_TAG}
+LOCAL_IMAGE_NAME:=${ECR_REPO_NAME}:${LOCAL_TAG}
 SHELL:=/bin/bash
 
 test:

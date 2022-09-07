@@ -161,3 +161,12 @@ Tests
 make test
 make integration_test
 ```
+
+Create a key-pair call webserver_key and copy into modules/ec2
+Can be done from the console or run:
+```
+sudo apt install jq
+aws ec2 create-key-pair --key-name webserver_key | jq -r ".KeyMaterial" > modules/ec2/webserver_key.pem
+chmod 400 modules/ec2/webserver_key.pem
+```
+cd infrastructure && terraform apply -target=module.mlflow_server -var-file=vars/prod.tfvars

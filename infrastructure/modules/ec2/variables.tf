@@ -6,7 +6,7 @@ variable "bucket_name" {
 
 variable "ami" {
     type = string
-    default = "ami-052efd3df9dad4825"
+    default = "ami-05fa00d4c63e32376"
 }
 
 variable "instance_type" {

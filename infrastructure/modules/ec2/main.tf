@@ -132,7 +132,7 @@ resource "aws_instance" "mlflow_instance" {
 
   connection {
         type    = "ssh"
-        user    = "ubuntu"
+        user    = "ec2-user"
         host    = self.public_ip
         port    = 22
         private_key = file("${path.module}/webserver_key.pem")

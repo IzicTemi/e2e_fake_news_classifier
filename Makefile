@@ -27,7 +27,7 @@ setup:
 	pip install tf-nightly
 	pre-commit install
 
-create_bucket:
+create_bucket: create_key
 	cd infrastructure && terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform apply -target=module.s3_bucket -var-file=vars/prod.tfvars
 
 setup_tf_vars:
@@ -36,11 +36,15 @@ setup_tf_vars:
 	sed -i "s/project_id.*/project_id = \"${PROJECT_ID}\"/g" infrastructure/vars/prod.tfvars && \
 	sed -i "5s/bucket.*/bucket = \"${TFSTATE_BUCKET}\"/g" infrastructure/main.tf
 
-mlflow_server:
+mlflow_server: create_key
+	cd infrastructure && bash ../scripts/mlflow_server.sh
+
+create_key:
 	sudo apt install -y jq
 	cd infrastructure && bash ../scripts/mlflow_setup.sh
+
 
 destroy:
 	cd infrastructure && terraform destroy -var-file=vars/prod.tfvars
 	aws ec2 delete-key-pair --key-name webserver_key
-	cd infrastructure && $(shell test -f modules/ec2/webserver_key.pem && rm modules/ec2/webserver_key.pem)
+	[ -f infrastructure/modules/ec2/webserver_key.pem ] && rm infrastructure/modules/ec2/webserver_key.pem

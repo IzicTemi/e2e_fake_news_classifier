@@ -3,6 +3,9 @@ import os
 # import sys
 from pathlib import Path
 
+from prefect import flow
+from prefect.task_runners import SequentialTaskRunner
+
 import get_data
 
 # lambda_function_path = str(Path.cwd().parent.absolute().joinpath('web_service'))
@@ -14,16 +17,18 @@ import get_data
 # classify("ball")
 
 
+@flow(task_runner=SequentialTaskRunner)
 def test_get_data():
     DATA_PATH = get_data.DATA_PATH
     Path(DATA_PATH).mkdir(parents=True, exist_ok=True)
     dataset = 'tarundalal/100-richest-people-in-world'
-    get_data.download_dataset(dataset)
+    data_ft = get_data.download_dataset.submit(dataset)
     assert '100-richest-people-in-world.zip' in os.listdir(DATA_PATH)
-    get_data.unzip()
+    unzip_ft = get_data.unzip.submit(wait_for=[data_ft])
     assert 'TopRichestInWorld.csv' in os.listdir(DATA_PATH)
-    get_data.del_zip()
+    get_data.del_zip.submit(wait_for=[unzip_ft])
     assert '100-richest-people-in-world.zip' not in os.listdir(DATA_PATH)
+    os.remove(f"{DATA_PATH}/TopRichestInWorld.csv")
 
 
 # class ModelMock:

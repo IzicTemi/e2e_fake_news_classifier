@@ -4,7 +4,6 @@ variable "region" {
 
 variable "project_id" {
   description = "project_id"
-  default = "mlops-zoomcamp"
 }
 
 variable "model_bucket" {

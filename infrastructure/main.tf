@@ -2,8 +2,8 @@
 terraform {
   required_version = ">= 1.0"
   backend "s3" {
-    bucket  = "my-tf-state-mlops-zoomcamp"
-    key     = "mlops-final-stg.tfstate"
+    bucket = "my-tf-state-mlops-zoomcamp"
+    key     = "mlops-final-prod.tfstate"
     region  = "us-east-1"
     encrypt = true
   }
@@ -22,6 +22,11 @@ locals {
 # model bucket
 module "s3_bucket" {
   source = "./modules/s3"
+  bucket_name = "${var.model_bucket}-${var.project_id}"
+}
+
+module "mlflow_server" {
+  source = "./modules/ec2"
   bucket_name = "${var.model_bucket}-${var.project_id}"
 }
 
@@ -57,4 +62,8 @@ output "ecr_repo" {
 
 output "lambda_rest_api_url" {
   value = module.lambda_function.base_url
+}
+
+output "mlflow_server" {
+  value = module.mlflow_server.ec2_url
 }

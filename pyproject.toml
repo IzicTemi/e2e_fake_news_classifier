@@ -9,7 +9,9 @@ disable = [
     "too-few-public-methods",
     "inconsistent-return-statements",
     "redefined-outer-name",
-    "duplicate-code"
+    "duplicate-code",
+    "logging-fstring-interpolation",
+    "ungrouped-imports"
 ]
 
 [tool.black]

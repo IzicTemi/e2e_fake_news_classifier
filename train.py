@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # pylint: disable=import-error
 # pylint: disable=no-name-in-module
 # pylint: disable=redefined-outer-name
@@ -470,8 +472,8 @@ def register_best_model(EXPT_NAME, MLFLOW_TRACKING_URI, model_name):
         )
 
 
-@flow
-def main():
+@flow(name="train model")
+def study_and_train():
 
     logger = get_run_logger()
 
@@ -556,4 +558,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    study_and_train()

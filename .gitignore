@@ -10,12 +10,11 @@ __pycache__/
 **terraform.tfstate*
 old-tran.py
 passwords.txt
-scripts/set_env.sh
+scripts/set_env_test.sh
 save/
 *.ipynb
 *.db
 *.out
 *.err
 *.pem
-**/webserver_key*
-extra
+extra.txt

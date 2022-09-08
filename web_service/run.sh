@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ "${LOCAL_IMAGE_NAME}" == "" ]; then
+if [ "${LOCAL_IMAGE_NAME}" == "" ] || [ "${LOCAL_IMAGE_NAME}" != "${ECR_REPO_NAME}"* ]; then
     LOCAL_TAG=`date +"%Y-%m-%d-%H"`
     export LOCAL_IMAGE_NAME="${ECR_REPO_NAME}:${LOCAL_TAG}"
     echo "LOCAL_IMAGE_NAME is not set, building a new image with tag ${LOCAL_IMAGE_NAME}"

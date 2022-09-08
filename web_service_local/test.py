@@ -1,7 +1,12 @@
 import requests
 
-ride = {"text": "I am a boy"}
+text = "I am a boy"
+
+input_dict = {
+    'text': text,
+}
+
 
 url = 'http://127.0.0.1:9696/classify'
-response = requests.post(url, json=ride, timeout=300)
+response = requests.post(url, json=input_dict, timeout=300)
 print(response.json())

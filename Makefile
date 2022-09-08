@@ -16,15 +16,16 @@ build: quality_checks test
 integration_test: build
 	LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash integration-test/run.sh
 
-publish: integration_test
+publish: integration_test create_key
 	cd infrastructure && terraform apply -var-file=vars/prod.tfvars
 	LAMBDA_FUNCTION=$(shell cd infrastructure && terraform output lambda_function)\
     LOCAL_IMAGE_NAME=${LOCAL_IMAGE_NAME} bash scripts/publish.sh
 
 setup:
 	pip install -U pip
+	pip install pipenv
 	pipenv install --dev
-	pip install tf-nightly
+	pip install tf-nightly -q
 	pre-commit install
 
 create_bucket: create_key
@@ -43,8 +44,7 @@ create_key:
 	sudo apt install -y jq
 	cd infrastructure && bash ../scripts/mlflow_setup.sh
 
-
-destroy:
+destroy: create_key
 	cd infrastructure && terraform destroy -var-file=vars/prod.tfvars
 	aws ec2 delete-key-pair --key-name webserver_key
-	[ -f infrastructure/modules/ec2/webserver_key.pem ] && rm infrastructure/modules/ec2/webserver_key.pem
+	[ -f infrastructure/modules/ec2/webserver_key.pem ] && rm -f infrastructure/modules/ec2/webserver_key.pem

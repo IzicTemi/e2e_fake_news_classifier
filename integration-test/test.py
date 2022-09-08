@@ -12,7 +12,7 @@ print(actual_response)
 
 expected_response = {
     'text': text,
-    'class': 'boy',
+    'class': False,
 }
 
 

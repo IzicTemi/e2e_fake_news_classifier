@@ -26,7 +26,8 @@ def get_tokenizer():
 def prepare(text):
     maxlen = 300
     tokenizer = get_tokenizer()
-    tokens = tokenizer.texts_to_sequences(text)
+    list_of_text = text.split()
+    tokens = tokenizer.texts_to_sequences(list_of_text)
     tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
     return tokens
 
@@ -37,11 +38,11 @@ def load_model():
     return model
 
 
-def classify(text):
+def classify(tokens):
     print("Loading the model...")
     model = load_model()
     print("Successful!")
-    preds = model.predict(text)
+    preds = model.predict(tokens)
     return preds
 
 
@@ -52,9 +53,9 @@ app = Flask('fake-news-classifier')
 def classify_endpoint():
     text = request.get_json()
 
-    prepped_text = prepare(text['text'])
+    tokens = prepare(text['text'])
 
-    pred = classify(prepped_text)
+    pred = classify(tokens)
 
     result = {'text': text['text'], 'class': 'boy'}
 

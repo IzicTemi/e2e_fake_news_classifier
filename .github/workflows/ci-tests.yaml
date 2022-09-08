@@ -8,6 +8,10 @@ env:
   AWS_DEFAULT_REGION: 'us-east-1'
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+  MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+  MODEL_NAME: 'fake-news-detect'
 
 jobs:
   test:
@@ -33,18 +37,11 @@ jobs:
 
       - name: Run Unit tests
         run: |
-
           pipenv run pytest tests/
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
           DATA_PATH: 'data'
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          MODEL_NAME: 'fake-news-detect'
 
       - name: Lint
         run: pipenv run pylint --recursive=y .
@@ -52,22 +49,10 @@ jobs:
       - name: Integration Test
         working-directory: 'integration-test'
         run: |
-          export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-          export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-          export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
-          export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
-          export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
-          export ECR_REPO_NAME=${ECR_REPO_NAME}
-          export MODEL_NAME=${MODEL_NAME}
           ./run.sh
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           ECR_REPO_NAME: 'prod-fake-news-detect-mlops-zoomcamp'
-          MODEL_NAME: 'fake-news-detect'
+
   tf-plan:
     runs-on: ubuntu-latest
     outputs:
@@ -86,8 +71,7 @@ jobs:
         id: plan
         working-directory: 'infrastructure'
         run: |
-          export SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY}
-          echo "$SSH_PRIVATE_KEY" > modules/ec2/webserver_key.pem
+          echo "${SSH_PRIVATE_KEY}" > modules/ec2/webserver_key.pem
           chmod 400 modules/ec2/webserver_key.pem
           terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file=vars/prod.tfvars
         env:

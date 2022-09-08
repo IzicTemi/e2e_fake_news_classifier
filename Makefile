@@ -25,7 +25,7 @@ setup:
 	pip install -U pip
 	pip install pipenv
 	pipenv install --dev
-	pip install tf-nightly -q
+	pipenv run pip install tf-nightly -q
 	pre-commit install
 
 create_bucket: create_key

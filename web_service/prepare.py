@@ -13,6 +13,6 @@ def main(MLFLOW_TRACKING_URI, model_name):
 
 
 if __name__ == '__main__':
-    MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
+    MLFLOW_TRACKING_URI = os.getenv('MLFLOW_TRACKING_URI')
     model_name = os.getenv('MODEL_NAME')
     main(MLFLOW_TRACKING_URI, model_name)

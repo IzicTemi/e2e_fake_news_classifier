@@ -12,6 +12,7 @@ env:
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
   MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
   MODEL_NAME: 'fake-news-detect'
+  ECR_REPO_NAME: 'prod-fake-news-detect-mlops-zoomcamp'
 
 jobs:
   test:
@@ -50,8 +51,6 @@ jobs:
         working-directory: 'integration-test'
         run: |
           ./run.sh
-        env:
-          ECR_REPO_NAME: 'prod-fake-news-detect-mlops-zoomcamp'
 
   tf-plan:
     runs-on: ubuntu-latest

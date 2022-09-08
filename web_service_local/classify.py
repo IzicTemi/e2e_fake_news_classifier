@@ -1,6 +1,5 @@
 # pylint: disable=import-error
 # pylint: disable=no-name-in-module
-# pylint: disable=unused-variable
 
 import os
 import pickle
@@ -26,10 +25,9 @@ def get_tokenizer():
 def prepare(text):
     maxlen = 300
     tokenizer = get_tokenizer()
-    list_of_text = text.split()
-    tokens = tokenizer.texts_to_sequences(list_of_text)
-    tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
-    return tokens
+    tokens = tokenizer.texts_to_sequences([text])
+    prepped_tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
+    return prepped_tokens
 
 
 def load_model():
@@ -38,11 +36,11 @@ def load_model():
     return model
 
 
-def classify(tokens):
+def classify(prepped_tokens):
     print("Loading the model...")
     model = load_model()
     print("Successful!")
-    preds = model.predict(tokens)
+    preds = model.predict(prepped_tokens)
     return preds
 
 
@@ -57,7 +55,19 @@ def classify_endpoint():
 
     pred = classify(tokens)
 
-    result = {'text': text['text'], 'class': 'boy'}
+    int_pred = (pred > 0.5).astype("int32").tolist()[0][0]
+
+    dict_map = {
+        0: False,
+        1: True,
+    }
+
+    final_pred = dict_map[int_pred]
+
+    result = {
+        'text': text['text'],
+        'class': final_pred,
+    }
 
     return jsonify(result)
 

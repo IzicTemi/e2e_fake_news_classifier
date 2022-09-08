@@ -13,7 +13,8 @@ if [ "${LOCAL_IMAGE_NAME}" == "" ]; then
     --build-arg MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME} \
     --build-arg MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD} \
     --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+    --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+    --build-arg MODEL_NAME=${MODEL_NAME}
 
 else
     echo "no need to build image ${LOCAL_IMAGE_NAME}"

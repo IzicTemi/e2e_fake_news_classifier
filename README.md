@@ -1,20 +1,48 @@
-# End to End Fake News Detector (Not done)
+# End to End Fake News Classifier
 
-## About the project (Not done)
+This repository contains an implementation of an end to end fake news classifier.
 
+It is the final capstone project for
+[MLOps Zoomcamp course](https://github.com/DataTalksClub/mlops-zoomcamp) from [DataTalks.Club](https://datatalks.club).
 
-## About the data (Not done)
+## About the Project
 
-data source: https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset
+Misinformation is wide spread. The aim of the project is to train and deploy a model to detect the presence of fake claims in articles.
+
+Emphasis is largely placed on the MLOps pipeline.
+
+## About the Data
+
+Data source: [Fake and real news dataset](https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset)
+
+This data consists of about 40000 articles consisting of fake and real news. The data consists of two separate datasets - one for each news category with each dataset containing around 20000 articles.
 
 ## Project Solution and Architecture
 
+Tools used include:
+1. [Terraform](https://www.terraform.io) is the Infrastructure as Code (IaC) tool used for creating resources.
+2. [MLflow](https://www.mlflow.org) for experiment tracking.
+3. [Docker](https://www.docker.com) for containerization.
+4. [Prefect 2.0](https://www.prefect.io/opensource/v2/) for workflow orchestration.
+5. [AWS S3 Lambda](https://aws.amazon.com/s3/) for cloud deployment and inference.
+6. [Flask](https://flask.palletsprojects.com/en/2.2.x/) for local deployment and inference.
+7. [Github Actions](https://github.com/features/actions) for Continuous Integration and Continuous Delivery.
+
+### Machine Learning Model
+
+The model builds on ideas from Madhav Mathur's [notebook](https://www.kaggle.com/code/madz2000/nlp-using-glove-embeddings-99-87-accuracy).
+
+Words are represented using GloVe Embeddings which is a word vector technique. GloVe incorporates global statistics (word co-occurrence) to obtain word vectors. More info about GloVe [here](https://towardsdatascience.com/light-on-math-ml-intuitive-guide-to-understanding-glove-embeddings-b13b4f19c010?gi=b9a4fd6dc8ff).
+
+An LSTM model with 5 layers was trained using Tensorflow and Keras.
 
 ### Pre-requisite
 
-Setup an AWS account
+Optional - Create a VM with about 8gbs of RAM. This would allow for fast training and downloading the fairly large dataset (~2gb), pulling and pushing of required docker containers.
 
-Setup a Kaggle account for getting the data
+Setup an AWS account.
+
+Setup a Kaggle account for getting the data.
 
 Install Python 3.9
 ```
@@ -22,6 +50,7 @@ wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh
 chmod +x Miniconda3-py39_4.12.0-Linux-x86_64.sh
 ./Miniconda3-py39_4.12.0-Linux-x86_64.sh
 ```
+
 Install aws-cli
 ```
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -30,7 +59,8 @@ unzip awscliv2.zip
 sudo ./aws/install
 rm -r awscliv2.zip aws/
 ```
-Create aws user with administrator access
+
+Create AWS user with administrator access. Note the AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID.
 
 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 
@@ -53,11 +83,11 @@ https://learn.hashicorp.com/tutorials/terraform/install-cli
 
 ### Getting Started
 
-If interested in testing automated deploy capabilities using Github Actions, fork the repository and clone fork to local machine
+If interested in testing automated deploy capabilities using Github Actions, fork the repository and clone fork to local machine.
 
 **OR**
 
-To test locally or manually deploy, clone the repository to local machine
+To test locally or manually deploy, clone the repository to your local machine.
 ```
 git clone https://github.com/IzicTemi/mlops_zoomcamp_final_project.git
 ```
@@ -73,11 +103,11 @@ Edit [set_env.sh](scripts/set_env.sh)
 
  - DATA_PATH is path to store data. Preferrably "data"
 
- - MODEL_BUCKET is the intended name of s3 bucket to store Mlflow artifacts
+ - MODEL_BUCKET is the intended name of s3 bucket to store MLflow artifacts
 
  - PROJECT_ID is the tag to add to created resources to ensure uniqueness
 
- - MLFLOW_TRACKING_URI is the tracking server url. Default is "http://127.0.0.1:5000" for local Mlflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance
+ - MLFLOW_TRACKING_URI is the tracking server url. Default is http://127.0.0.1:5000 for local MLflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance
 
  - TFSTATE_BUCKET is the intended name of s3 bucket to store Terraform State files
 
@@ -91,7 +121,7 @@ Edit [set_env.sh](scripts/set_env.sh)
 
  Optional
 
- - MLFLOW_TRACKING_USERNAME and MLFLOW_TRACKING_PASSWORD if using an authenticated mlflow server
+ - MLFLOW_TRACKING_USERNAME and MLFLOW_TRACKING_PASSWORD if using an authenticated MLflow server
 
 Run command:
 ```
@@ -101,9 +131,9 @@ source scripts/set_env.sh
 ```
 make setup_tf_vars
 ```
-3. Optional - Setup Mlflow Server on ec2 instance
+3. Optional - Setup MLflow Server on ec2 instance
 
-Manually setup Mlflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md)
+Manually setup MLflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md)
 
 **OR**
 
@@ -111,7 +141,7 @@ Run
 ```
 make mlflow_server
 ```
-- The above command creates a free tier eligible ec2 instance and installs Mlflow on it using Terraform.
+- The above command creates a free tier eligible ec2 instance and installs MLflow on it using Terraform.
 - It also creates a key pair called webserver_key and downloads the private key to the ec2 module in the infrastructure folder. This allows Terraform interact with the ec2 instance.
 - An sqlite db is used as the backend store. In the future, a better implementation would be to use a managed RDS instance. This could be added later.
 
@@ -120,7 +150,7 @@ make mlflow_server
 This can be done from the console or by running
 ```
 aws s3api create-bucket --bucket $TFSTATE_BUCKET \
---region $AWS_DEFAULT_REGION
+    --region $AWS_DEFAULT_REGION
 ```
 
 5. Optional - If AWS default region not us-east-1, run
@@ -128,7 +158,7 @@ aws s3api create-bucket --bucket $TFSTATE_BUCKET \
 find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
 
-### Running the Solution
+### Implementing the Solution
 
 1. Install dependencies and setup environment
 ```
@@ -142,7 +172,7 @@ make setup
 pipenv shell
 ```
 
-3. Create S3 bucket to store Mlflow artifacts
+3. Create S3 bucket to store MLflow artifacts
 ```
 make create_bucket
 ```
@@ -152,7 +182,7 @@ make create_bucket
 python get_data.py
 ```
 
-5. Optional - If running locally, start Mlflow server
+5. Optional - If running locally, start MLflow server
 ```
 mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
@@ -232,7 +262,7 @@ python web_service/test.py
 
 </ol>
 
-Tests
+### Tests
 ```
 make test
 make integration_test

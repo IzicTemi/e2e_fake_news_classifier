@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import zipfile
 from pathlib import Path
@@ -67,8 +69,8 @@ def del_zip():
             os.remove(Path(DATA_PATH).joinpath(file))
 
 
-@flow()
-def main():
+@flow(name="get_data")
+def get_data():
     dataset = download_dataset.submit(DATASET_KAGGLE_URL)
     glove = download_glove.submit(GLOVE_EMBEDDINGs_URL)
     unzipper = unzip.submit(wait_for=[dataset, glove])
@@ -76,4 +78,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    get_data()

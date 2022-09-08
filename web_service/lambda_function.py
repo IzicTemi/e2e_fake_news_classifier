@@ -21,12 +21,12 @@ def get_tokenizer():
     return tokenizer
 
 
-def prepare(text):
+def prepare_tokens(text):
     maxlen = 300
     tokenizer = get_tokenizer()
-    tokens = tokenizer.texts_to_sequences(text)
-    tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
-    return tokens
+    tokens = tokenizer.texts_to_sequences([text])
+    prepped_tokens = sequence.pad_sequences(tokens, maxlen=maxlen)
+    return prepped_tokens
 
 
 def load_model():
@@ -35,26 +35,34 @@ def load_model():
     return model
 
 
-def classify(text):
+def classify(prepped_tokens):
     print("Loading the model...")
     model = load_model()
     print("Successful!")
-    preds = model.predict(text)
+    preds = model.predict(prepped_tokens)
     return preds
 
 
 def lambda_handler(event, context):
     # pylint: disable=unused-argument
-    # pylint: disable=unused-variable
     text = event['text']
 
-    prepped_text = prepare(text)
+    tokens = prepare_tokens(text)
 
-    pred = classify(prepped_text)
+    pred = classify(tokens)
+
+    int_pred = (pred > 0.5).astype("int32").tolist()[0][0]
+
+    dict_map = {
+        0: False,
+        1: True,
+    }
+
+    final_pred = dict_map[int_pred]
 
     result = {
         'text': text,
-        'class': 'boy',
+        'class': final_pred,
     }
 
     return result

@@ -38,6 +38,15 @@ Install docker
 
 https://docs.docker.com/desktop/install/linux-install/
 
+Allow docker to run without sudo
+
+https://docs.docker.com/engine/install/linux-postinstall/
+
+Install docker-compose
+```
+sudo apt install docker-compose
+```
+
 Install Terraform
 
 https://learn.hashicorp.com/tutorials/terraform/install-cli
@@ -46,7 +55,7 @@ https://learn.hashicorp.com/tutorials/terraform/install-cli
 
 If interested in testing automated deploy capabilities using Github Actions, fork the repository and clone fork to local machine
 
-OR
+**OR**
 
 To test locally or manually deploy, clone the repository to local machine
 ```
@@ -58,17 +67,17 @@ git clone https://github.com/IzicTemi/mlops_zoomcamp_final_project.git
 
 1. Set Environment Variables
 
-Edit scripts/set_env.sh
+Edit [set_env.sh](scripts/set_env.sh)
 
  - Get KAGGLE_USERNAME and KAGGLE_KEY following the instructions [here](https://www.kaggle.com/docs/api#:~:text=is%20%24PYTHON_HOME/Scripts.-,Authentication,-In%20order%20to)
 
-- DATA_PATH is path to store data. Preferrably "data"
+ - DATA_PATH is path to store data. Preferrably "data"
 
  - MODEL_BUCKET is the intended name of s3 bucket to store Mlflow artifacts
 
  - PROJECT_ID is the tag to add to created resources to ensure uniqueness
 
- - MLFLOW_TRACKING_URI is the tracking server url. Default is "http://127.0.0.1:5000" for local Mlflow setup
+ - MLFLOW_TRACKING_URI is the tracking server url. Default is "http://127.0.0.1:5000" for local Mlflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance
 
  - TFSTATE_BUCKET is the intended name of s3 bucket to store Terraform State files
 
@@ -88,7 +97,25 @@ Run command:
 ```
 source scripts/set_env.sh
 ```
-2. Create S3 Bucket to store Terraform States
+2. Set Terraform variables
+```
+make setup_tf_vars
+```
+3. Optional - Setup Mlflow Server on ec2 instance
+
+Manually setup Mlflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md)
+
+**OR**
+
+Run
+```
+make mlflow_server
+```
+- The above command creates a free tier eligible ec2 instance and installs Mlflow on it using Terraform.
+- It also creates a key pair called webserver_key and downloads the private key to the ec2 module in the infrastructure folder. This allows Terraform interact with the ec2 instance.
+- An sqlite db is used as the backend store. In the future, a better implementation would be to use a managed RDS instance. This could be added later.
+
+4. Create S3 Bucket to store Terraform States
 
 This can be done from the console or by running
 ```
@@ -96,44 +123,41 @@ aws s3api create-bucket --bucket $TFSTATE_BUCKET \
 --region $AWS_DEFAULT_REGION
 ```
 
-3. Set Terraform variables
-```
-make setup_tf_vars
-```
-
-4. Optional - If AWS default region not us-east-1, run
+5. Optional - If AWS default region not us-east-1, run
 ```
 find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
 
 ### Running the Solution
 
-Install dependencies and setup environment
+1. Install dependencies and setup environment
 ```
 make setup
 ```
+- The above command install pipenv which in turn sets up the virtual environment
+- It also installs the pre commit hooks
 
-Start shell
+2. Start virtual environment
 ```
 pipenv shell
 ```
 
-Create S3 bucket to store Mlflow artifacts
+3. Create S3 bucket to store Mlflow artifacts
 ```
-make create-bucket
+make create_bucket
 ```
 
-Get dataset
+4. Get dataset from Kaggle
 ```
 python get_data.py
 ```
 
-Start Mlflow Server
+5. Optional - If running locally, start Mlflow server
 ```
 mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
 
-Train the model
+6. Train the model
 
 The model training process performs a hyperparameter search to get best parameters. This could take very long and is memory intensive. If interested in the full training process, run
 ```
@@ -142,31 +166,74 @@ python train.py
 
 For testing purposes, set a small number of optimization trials and lower the number of epochs required to train the model
 ```
-python train.py --n_evals 3 --epochs 5
+python train.py --n_evals 2 --epochs 3
 ```
 
-Deploy web service locally using Flask
+7. Workflow Orchestration with Prefect
+
+To automate getting the data and training the model on a schedule run:
+```
+python prefect_deploy.py
+
+prefect agent start  --work-queue "main"
+```
+- The above script uses [Prefect](https://www.prefect.io/opensource/v2/) to automate the deployment. Using a Cron Scheduler currently set to run by 00:00 every Monday, the agent looks for work and runs it at the appointed time.
+- To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule
+- To view the scheduled deployments, run
+```
+prefect orion start
+```
+
+8. Deploying the Model
+<ol type="a">
+
+<li> Deploy web service locally using Flask</li>
+
 ```
 cd web_service_local
+
 ./run.sh
 ```
+- To make inferences make a POST request to http://127.0.0.1:9696/classify
+- The content of the POST request should be of the format:
+```
+{
+    'text': text
+}
+```
+**OR**
 
-Manually deploy web service to AWS Lambda
+Edit and run [test.py](web_service_local/test.py)
 ```
-make pulish
+python web_service_local/test.py
 ```
+
+<li> Manually deploy web service to AWS Lambda </li>
+
+```
+make publish
+```
+- The above command uses Terraform to deploy the model to AWS Lambda and exposes it using an API gateway endpoint.
+- The scripts outputs the endpoint of the Lambda function.
+- To make inferences make a POST request to the output url.
+- The content of the POST request should be of the format:
+```
+{
+    'text': text
+}
+```
+**OR**
+
+Edit and run [test.py](web_service/test.py)
+```
+python web_service/test.py
+```
+- If you get a {'message': 'Endpoint request timed out'} error. Retry the request, the initial model loading takes time.
+
+</ol>
 
 Tests
 ```
 make test
 make integration_test
 ```
-
-Create a key-pair call webserver_key and copy into modules/ec2
-Can be done from the console or run:
-```
-sudo apt install jq
-aws ec2 create-key-pair --key-name webserver_key | jq -r ".KeyMaterial" > modules/ec2/webserver_key.pem
-chmod 400 modules/ec2/webserver_key.pem
-```
-cd infrastructure && terraform apply -target=module.mlflow_server -var-file=vars/prod.tfvars

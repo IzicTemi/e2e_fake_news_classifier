@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - 'develop'
-  #  paths:
-  #    - '06-best-practices/code/**'
+
 env:
   MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
@@ -31,7 +30,6 @@ jobs:
         id: tf-plan
         working-directory: 'infrastructure'
         run: |
-          export SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY}
           echo "$SSH_PRIVATE_KEY" > modules/ec2/webserver_key.pem
           chmod 400 modules/ec2/webserver_key.pem
           terraform init -backend-config="key=mlops-final-prod.tfstate" -reconfigure && terraform plan -var-file=vars/prod.tfvars
@@ -65,21 +63,15 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}
           IMAGE_TAG: "latest"
-          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
-          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
-          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MODEL_NAME: 'fake-news-detect'
         run: |
-          export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-          export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-          export MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD}
-          export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
-          export MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME}
           docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
             --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
             --build-arg MLFLOW_TRACKING_USERNAME=${MLFLOW_TRACKING_USERNAME} \
             --build-arg MLFLOW_TRACKING_PASSWORD=${MLFLOW_TRACKING_PASSWORD} \
             --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-            --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+            --build-arg MODEL_NAME=${MODEL_NAME}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "::set-output name=image_uri::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 

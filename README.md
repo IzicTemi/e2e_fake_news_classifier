@@ -228,7 +228,7 @@ Edit and run [test.py](web_service/test.py)
 ```
 python web_service/test.py
 ```
-- If you get a {'message': 'Endpoint request timed out'} error. Retry the request, the initial model loading takes time.
+- If you get a {'message': 'Endpoint request timed out'} error, retry the request, the initial model loading takes time.
 
 </ol>
 

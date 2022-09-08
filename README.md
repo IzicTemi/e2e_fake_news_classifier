@@ -38,17 +38,18 @@ An LSTM model with 5 layers was trained using Tensorflow and Keras.
 
 ### Pre-requisite
 
-Optional - Create a VM with about 8gbs of RAM. This would allow for fast training and downloading the fairly large dataset (~2gb), pulling and pushing of required docker containers.
+Optional - Create a VM with about 8gbs of RAM. This would allow for fast training, downloading the fairly large dataset (~2gb), pulling and pushing of required docker containers.
 
-Setup an AWS account.
+Set up an AWS account.
 
-Setup a Kaggle account for getting the data.
+Set up a Kaggle account for getting the data.
 
 Install Python 3.9
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh
 chmod +x Miniconda3-py39_4.12.0-Linux-x86_64.sh
 ./Miniconda3-py39_4.12.0-Linux-x86_64.sh
+rm Miniconda3-py39_4.12.0-Linux-x86_64.sh
 ```
 
 Install aws-cli
@@ -97,55 +98,38 @@ git clone https://github.com/IzicTemi/mlops_zoomcamp_final_project.git
 
 1. Set Environment Variables
 
-Edit [set_env.sh](scripts/set_env.sh) in [scripts](scripts/) folder
+Edit [set_env.sh](scripts/set_env.sh) in [scripts](scripts/) folder.
 
- - Get KAGGLE_USERNAME and KAGGLE_KEY following the instructions [here](https://www.kaggle.com/docs/api#:~:text=is%20%24PYTHON_HOME/Scripts.-,Authentication,-In%20order%20to)
+ - Get KAGGLE_USERNAME and KAGGLE_KEY following the instructions [here](https://www.kaggle.com/docs/api#:~:text=is%20%24PYTHON_HOME/Scripts.-,Authentication,-In%20order%20to).
 
- - DATA_PATH is path to store data. Preferrably "data"
+ - DATA_PATH is path to store data. Preferrably "data".
 
- - MODEL_BUCKET is the intended name of s3 bucket to store MLflow artifacts
+ - MODEL_BUCKET is the intended name of s3 bucket to store MLflow artifacts.
 
- - PROJECT_ID is the tag to add to created resources to ensure uniqueness
+ - PROJECT_ID is the tag to add to created resources to ensure uniqueness.
 
- - MLFLOW_TRACKING_URI is the tracking server url. Default is http://127.0.0.1:5000 for local MLflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance
+ - MLFLOW_TRACKING_URI is the tracking server url. Default is http://127.0.0.1:5000 for local MLflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance.
 
- - TFSTATE_BUCKET is the intended name of s3 bucket to store Terraform State files
+ - TFSTATE_BUCKET is the intended name of s3 bucket to store Terraform State files.
 
- - AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID from user created above
+ - AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID from user created above.
 
- - AWS_DEFAULT_REGION is the default region for resources to be created
+ - AWS_DEFAULT_REGION is the default region for resources to be created.
 
- - ECR_REPO_NAME is the intended name of ECR registry to store docker images
+ - ECR_REPO_NAME is the intended name of ECR registry to store docker images.
 
- - MODEL_NAME is the name to which to register the trained models
+ - MODEL_NAME is the name to which to register the trained models.
 
  Optional
 
- - MLFLOW_TRACKING_USERNAME and MLFLOW_TRACKING_PASSWORD if using an authenticated MLflow server
+ - MLFLOW_TRACKING_USERNAME and MLFLOW_TRACKING_PASSWORD if using an authenticated MLflow server.
 
 Run command:
 ```
 source scripts/set_env.sh
 ```
-2. Set Terraform variables
-```
-make setup_tf_vars
-```
-3. Optional - Setup MLflow Server on ec2 instance
 
-Manually setup MLflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md)
-
-**OR**
-
-Run
-```
-make mlflow_server
-```
-- The above command creates a free tier eligible ec2 instance and installs MLflow on it using Terraform.
-- It also creates a key pair called webserver_key and downloads the private key to the ec2 module in the infrastructure folder. This allows Terraform interact with the ec2 instance.
-- An sqlite db is used as the backend store. In the future, a better implementation would be to use a managed RDS instance. This could be added later.
-
-4. Create S3 Bucket to store Terraform States
+2. Create S3 Bucket to store Terraform States
 
 This can be done from the console or by running
 ```
@@ -153,7 +137,25 @@ aws s3api create-bucket --bucket $TFSTATE_BUCKET \
     --region $AWS_DEFAULT_REGION
 ```
 
-5. Optional - If AWS default region not us-east-1, run
+3. Set Terraform variables
+```
+make setup_tf_vars
+```
+4. Optional - Set up MLflow Server on ec2 instance
+
+Manually setup MLflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md).
+
+**OR**
+
+Run
+```
+make mlflow_server
+```
+- The above command creates a free tier eligible t2.micro ec2 instance and installs MLflow on it using Terraform.
+- It also creates a key pair called webserver_key and downloads the private key to the [ec2 module](infrastructure/modules/ec2) folder in the infrastructure folder. This allows Terraform interact with the ec2 instance.
+- An sqlite db is used as the backend store. In the future, a better implementation would be to use a managed RDS instance. This could be added later.
+
+5. Optional - If AWS default region not us-east-1, run:
 ```
 find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
@@ -164,8 +166,8 @@ find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
 make setup
 ```
-- The above command install pipenv which in turn sets up the virtual environment
-- It also installs the pre commit hooks
+- The above command install pipenv which in turn sets up the virtual environment.
+- It also installs the pre commit hooks.
 
 2. Start virtual environment
 ```
@@ -184,17 +186,18 @@ python get_data.py
 
 5. Optional - If running locally, start MLflow server
 ```
-mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root $ARTIFACT_LOC --serve-artifacts
+mlflow server --backend-store-uri sqlite:///mlflow.db \
+    --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
 
 6. Train the model
 
-The model training process performs a hyperparameter search to get best parameters. This could take very long and is memory intensive. If interested in the full training process, run
+The model training process performs a hyperparameter search to get best parameters. This could take very long and is memory intensive. If interested in the full training process, run:
 ```
 python train.py
 ```
 
-For testing purposes, set a small number of optimization trials and lower the number of epochs required to train the model
+For testing purposes, set a small number of optimization trials and lower the number of epochs required to train the model.
 ```
 python train.py --n_evals 2 --epochs 3
 ```
@@ -208,8 +211,8 @@ python prefect_deploy.py
 prefect agent start  --work-queue "main"
 ```
 - The above script uses [Prefect](https://www.prefect.io/opensource/v2/) to automate the deployment. Using a Cron Scheduler currently set to run by 00:00 every Monday, the agent looks for work and runs it at the appointed time.
-- To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule
-- To view the scheduled deployments, run
+- To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule.
+- To view the scheduled deployments, run:
 ```
 prefect orion start
 ```
@@ -224,7 +227,7 @@ cd web_service_local
 
 ./run.sh
 ```
-- To make inferences make a POST request to http://127.0.0.1:9696/classify
+- To make inferences, make a POST request to http://127.0.0.1:9696/classify
 - The content of the POST request should be of the format:
 ```
 {
@@ -245,7 +248,7 @@ make publish
 ```
 - The above command uses Terraform to deploy the model to AWS Lambda and exposes it using an API gateway endpoint.
 - The scripts outputs the endpoint of the Lambda function.
-- To make inferences make a POST request to the output url.
+- To make inferences, make a POST request to the output url.
 - The content of the POST request should be of the format:
 ```
 {
@@ -258,7 +261,7 @@ Edit and run [test.py](web_service/test.py) in [web_service](web_service/) folde
 ```
 python web_service/test.py
 ```
-- If you get a {'message': 'Endpoint request timed out'} error, retry the request, the initial model loading takes time.
+- If you get a {'message': 'Endpoint request timed out'} error, retry the request; the initial model loading takes time.
 
 </ol>
 
@@ -276,7 +279,7 @@ make integration_test
 git checkout test-branch
 ```
 
-3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Implementing the Solution](#implementing-the-solution)
+3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Implementing the Solution](#implementing-the-solution).
 
 4. Add Github Secrets to the forked repository as shown in the image below:
 
@@ -291,7 +294,7 @@ cat infrastructure/modules/ec2/webserver_key.pem
 - Replace env variable MODEL_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11)
 - Replace env variable ECR_REPO_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15)
 
-6. Commit and Push changes to Github
+6. Commit and push changes to Github.
 
 7. On branch develop of the forked repo, create a pull request to merge test-branch into develop.
 - This triggers the Continuous Integration workflow which runs unit tests, integration test and validates the Terraform configuration

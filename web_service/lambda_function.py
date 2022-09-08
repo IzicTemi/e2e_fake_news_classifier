@@ -21,7 +21,7 @@ def get_tokenizer():
     return tokenizer
 
 
-def prepare(text):
+def prepare_tokens(text):
     maxlen = 300
     tokenizer = get_tokenizer()
     tokens = tokenizer.texts_to_sequences([text])
@@ -45,10 +45,9 @@ def classify(prepped_tokens):
 
 def lambda_handler(event, context):
     # pylint: disable=unused-argument
-    # pylint: disable=unused-variable
     text = event['text']
 
-    tokens = prepare(text)
+    tokens = prepare_tokens(text)
 
     pred = classify(tokens)
 

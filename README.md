@@ -98,7 +98,7 @@ cd e2e_fake_news_classifier
 
 ### Preparing your workspace
 
-1. Set Environment Variables
+#### 1. Set Environment Variables
 
 Edit [set_env.sh](scripts/set_env.sh) in [scripts](scripts/) folder.
 
@@ -131,7 +131,7 @@ Run command:
 source scripts/set_env.sh
 ```
 
-2. Create S3 Bucket to store Terraform States
+#### 2. Create S3 Bucket to store Terraform States
 
 This can be done from the console or by running
 ```
@@ -139,11 +139,11 @@ aws s3api create-bucket --bucket $TFSTATE_BUCKET \
     --region $AWS_DEFAULT_REGION
 ```
 
-3. Set Terraform variables
+#### 3. Set Terraform variables
 ```
 make setup_tf_vars
 ```
-4. Optional - Set up MLflow Server on ec2 instance
+#### 4. Optional - Set up MLflow Server on ec2 instance
 
 Manually setup MLflow on an ec2 instance by following instructions [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/02-experiment-tracking/mlflow_on_aws.md).
 
@@ -157,42 +157,42 @@ make mlflow_server
 - It also creates a key pair called webserver_key and downloads the private key to the [ec2 module](infrastructure/modules/ec2) folder in the infrastructure folder. This allows Terraform interact with the ec2 instance.
 - An sqlite db is used as the backend store. In the future, a better implementation would be to use a managed RDS instance. This could be added later.
 
-5. Optional - If AWS default region not us-east-1, run:
+#### 5. Optional - If AWS default region not us-east-1, run:
 ```
 find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
 
 ### Instructions
 
-1. Install dependencies and setup environment
+#### 1. Install dependencies and setup environment
 ```
 make setup
 ```
 - The above command install pipenv which in turn sets up the virtual environment.
 - It also installs the pre commit hooks.
 
-2. Start virtual environment
+#### 2. Start virtual environment
 ```
 pipenv shell
 ```
 
-3. Create S3 bucket to store MLflow artifacts
+#### 3. Create S3 bucket to store MLflow artifacts
 ```
 make create_bucket
 ```
 
-4. Get dataset from Kaggle
+#### 4. Get dataset from Kaggle
 ```
 python get_data.py
 ```
 
-5. Optional - If running locally, start MLflow server
+#### 5. Optional - If running locally, start MLflow server
 ```
 mlflow server --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
 
-6. Train the model
+#### 6. Train the model
 
 The model training process performs a hyperparameter search to get best parameters. This could take very long and is memory intensive. If interested in the full training process, run:
 ```
@@ -204,7 +204,7 @@ For testing purposes, set a small number of optimization trials and lower the nu
 python train.py --n_evals 2 --epochs 3
 ```
 
-7. Workflow Orchestration with Prefect
+#### 7. Workflow Orchestration with Prefect
 
 To automate getting the data and training the model on a schedule run:
 ```
@@ -219,7 +219,7 @@ prefect agent start  --work-queue "main"
 prefect orion start
 ```
 
-8. Deploying the Model
+#### 8. Deploying the Model
 <ol type="a">
 
 <li> Deploy web service locally using Flask</li>
@@ -273,18 +273,20 @@ make test
 make integration_test
 ```
 
-## Continuous Integration and Deployment
+### Continuous Integration and Deployment
 
-1. Fork repository and clone fork to local machine.
+This allows for automatic tests and deployment by making and pushing changes to the repository.
 
-2. Switch branch to test-branch
+#### 1. Fork repository and clone fork to local machine.
+
+#### 2. Switch branch to test-branch
 ```
 git checkout test-branch
 ```
 
-3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Instructions](#instructions).
+#### 3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Instructions](#instructions).
 
-4. Add Github Secrets to the forked repository as shown in the image below:
+#### 4. Add Github Secrets to the forked repository as shown in the image below:
 
 ![Alt text](images/github_secrets.png?raw=true "Github Repository Secrets")
 - On the github repo, navigate to Settings -> Secrets -> Actions.
@@ -294,17 +296,17 @@ git checkout test-branch
 cat infrastructure/modules/ec2/webserver_key.pem
 ```
 
-5. Edit [ci-tests.yaml](.github/workflows/ci-tests.yaml) and [cd-deploy.yml](.github/workflows/cd-deploy.yml) in [.github/workflows](.github/workflows/) folder.
+#### 5. Edit [ci-tests.yaml](.github/workflows/ci-tests.yaml) and [cd-deploy.yml](.github/workflows/cd-deploy.yml) in [.github/workflows](.github/workflows/) folder.
 
 - Replace env variable MODEL_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11).
 - Replace env variable ECR_REPO_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15).
 
-6. Commit and push changes to Github.
+#### 6. Commit and push changes to Github.
 
-7. On branch develop of the forked repo, create a pull request to merge test-branch into develop.
+#### 7. On branch develop of the forked repo, create a pull request to merge test-branch into develop.
 - This triggers the Continuous Integration workflow which runs unit tests, integration test and validates the Terraform configuration.
 
-8. After all checks are completed, merge pull request into develop.
+#### 8. After all checks are completed, merge pull request into develop.
 - This triggers the Continuous Deployment workflow which applies the Terrafrom configuration and deploys the infrastructure.
 
 ## Destroy Infrastructure
@@ -324,3 +326,6 @@ aws s3 rm s3://$TFSTATE_BUCKET --recursive
 aws s3api delete-bucket --bucket $TFSTATE_BUCKET \
     --region $AWS_DEFAULT_REGION
 ```
+
+## License
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

@@ -36,6 +36,8 @@ Words are represented using GloVe Embeddings which is a word vector technique. G
 
 An LSTM model with 5 layers was trained using Tensorflow and Keras.
 
+## Implementing the Solution
+
 ### Pre-requisite
 
 Optional - Create a VM with about 8gbs of RAM. This would allow for fast training, downloading the fairly large dataset (~2gb), pulling and pushing of required docker containers.
@@ -90,11 +92,11 @@ If interested in testing automated deploy capabilities using Github Actions, for
 
 To test locally or manually deploy, clone the repository to your local machine.
 ```
-git clone https://github.com/IzicTemi/mlops_zoomcamp_final_project.git
+git clone https://github.com/IzicTemi/e2e_fake_news_classifier.git
+cd e2e_fake_news_classifier
 ```
 
 ### Preparing your workspace
-
 
 1. Set Environment Variables
 
@@ -160,7 +162,7 @@ make mlflow_server
 find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 ```
 
-### Implementing the Solution
+### Instructions
 
 1. Install dependencies and setup environment
 ```
@@ -270,20 +272,23 @@ python web_service/test.py
 make test
 make integration_test
 ```
+
 ## Continuous Integration and Deployment
 
 1. Fork repository and clone fork to local machine.
 
-2. Switch to branch test-branch
+2. Switch branch to test-branch
 ```
 git checkout test-branch
 ```
 
-3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Implementing the Solution](#implementing-the-solution).
+3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Instructions](#instructions).
 
 4. Add Github Secrets to the forked repository as shown in the image below:
 
-![Alt text](images/github_secrets.png?raw=true "Title")
+![Alt text](images/github_secrets.png?raw=true "Github Repository Secrets")
+- On the github repo, navigate to Settings -> Secrets -> Actions.
+- Add new Secrets by clicking on "New repository secret".
 - Copy the output of the command below and set as the value SSH_PRIVATE_KEY. This allows terraform interact with the MLflow Server.
 ```
 cat infrastructure/modules/ec2/webserver_key.pem
@@ -291,24 +296,31 @@ cat infrastructure/modules/ec2/webserver_key.pem
 
 5. Edit [ci-tests.yaml](.github/workflows/ci-tests.yaml) and [cd-deploy.yml](.github/workflows/cd-deploy.yml) in [.github/workflows](.github/workflows/) folder.
 
-- Replace env variable MODEL_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11)
-- Replace env variable ECR_REPO_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15)
+- Replace env variable MODEL_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11).
+- Replace env variable ECR_REPO_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15).
 
 6. Commit and push changes to Github.
 
 7. On branch develop of the forked repo, create a pull request to merge test-branch into develop.
-- This triggers the Continuous Integration workflow which runs unit tests, integration test and validates the Terraform configuration
+- This triggers the Continuous Integration workflow which runs unit tests, integration test and validates the Terraform configuration.
 
-8. After all checks are completed, merge pull request into develop
+8. After all checks are completed, merge pull request into develop.
 - This triggers the Continuous Deployment workflow which applies the Terrafrom configuration and deploys the infrastructure.
 
 ## Destroy Infrastructure
 
-On completing all the steps above, destroy all the setup infrastructure by running:
+On completing the steps above, destroy all the setup infrastructure by running:
 ```
 make destroy
 ```
-**Note**: This destroys all created infrastructure including MLflow Server and bucket. To prevent destruction of the bucket, edit the [s3 module](infrastructure/modules/s3/main.tf#L3) in the Terraform configuration and set:
+**Note**: This destroys all created infrastructure except the Terraform state bucket. The process includes the destruction of the MLflow Server and models bucket. To prevent destruction of the models bucket, edit the [s3 module](infrastructure/modules/s3/main.tf#L3) in the Terraform configuration and set:
 ```
 force_destroy = false
+```
+
+Empty and delete the Terraform state bucket from the console or by running:
+```
+aws s3 rm s3://$TFSTATE_BUCKET --recursive
+aws s3api delete-bucket --bucket $TFSTATE_BUCKET \
+    --region $AWS_DEFAULT_REGION
 ```

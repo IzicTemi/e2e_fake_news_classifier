@@ -21,7 +21,7 @@ This data consists of about 40000 articles consisting of fake and real news. The
 
 Tools used include:
 1. [Terraform](https://www.terraform.io) is the Infrastructure as Code (IaC) tool used for creating resources.
-2. [MLflow](https://www.mlflow.org) for experiment tracking.
+2. [MLflow](https://www.mlflow.org) for experiment tracking and as a model registry.
 3. [Docker](https://www.docker.com) for containerization.
 4. [Prefect 2.0](https://www.prefect.io/opensource/v2/) for workflow orchestration.
 5. [AWS S3 Lambda](https://aws.amazon.com/s3/) for cloud deployment and inference.
@@ -203,6 +203,7 @@ For testing purposes, set a small number of optimization trials and lower the nu
 ```
 python train.py --n_evals 2 --epochs 3
 ```
+- On completion of the optimization and training process, the best run is registered as a model and promoted to Production. This is implemented in the [register_best_model](train.py#L323) function.
 
 #### 7. Workflow Orchestration with Prefect
 

@@ -19,6 +19,8 @@ This data consists of about 40000 articles consisting of fake and real news. The
 
 ## Project Solution and Architecture
 
+![Alt text](images/e2e_architecture.jpeg?raw=true "Project Architecture")
+
 Tools used include:
 1. [Terraform](https://www.terraform.io) is the Infrastructure as Code (IaC) tool used for creating resources.
 2. [MLflow](https://www.mlflow.org) for experiment tracking and as a model registry.
@@ -26,7 +28,8 @@ Tools used include:
 4. [Prefect 2.0](https://www.prefect.io/opensource/v2/) for workflow orchestration.
 5. [AWS S3 Lambda](https://aws.amazon.com/s3/) for cloud deployment and inference.
 6. [Flask](https://flask.palletsprojects.com/en/2.2.x/) for local deployment and inference.
-7. [Github Actions](https://github.com/features/actions) for Continuous Integration and Continuous Delivery.
+7. [Evidently AI](https://docs.evidentlyai.com/) for monitoring.
+8. [Github Actions](https://github.com/features/actions) for Continuous Integration and Continuous Delivery.
 
 ### Machine Learning Model
 
@@ -267,6 +270,29 @@ python web_service/test.py
 - If you get a {'message': 'Endpoint request timed out'} error, retry the request; the initial model loading takes time.
 
 </ol>
+### Monitoring
+
+A Production Environment is simulated to get insights into model metrics and behavior. To implement this
+
+1. Spin up the Web Service and a MongoDB database to store requests.
+```
+cd monitoring
+
+./run.sh
+```
+2. Run [send_data.py](monitoring/send_data.py) to simulate requests to the model web service.
+```
+python send_data.py
+```
+- The above script creates a shuffled dataframe from the dataset which sends each row to the model service for prediction.
+- To generate enough data, let this run for at least 30 minutes.
+
+3. Generate a report from the run by running:
+```
+python prefect_monitoring.py
+```
+- The above command sets up a Prefect workflow which uses Evidently AI to calculate data drift, target drift and classification performance
+- This generates an HTML report saved to xxx
 
 ### Tests
 ```
@@ -324,9 +350,4 @@ force_destroy = false
 Empty and delete the Terraform state bucket from the console or by running:
 ```
 aws s3 rm s3://$TFSTATE_BUCKET --recursive
-aws s3api delete-bucket --bucket $TFSTATE_BUCKET \
-    --region $AWS_DEFAULT_REGION
-```
-
-## License
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+aws s3api delete-bucket --bucket $TFSTATE_BUC

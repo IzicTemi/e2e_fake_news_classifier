@@ -6,7 +6,6 @@ import pickle
 from pathlib import Path
 
 import mlflow
-import requests
 import mlflow.pyfunc
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
@@ -16,7 +15,6 @@ from tensorflow.keras.preprocessing import sequence
 MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
 
-EVIDENTLY_SERVICE_ADDRESS = os.getenv('EVIDENTLY_SERVICE')
 MONGODB_ADDRESS = os.getenv("MONGODB_ADDRESS")
 
 
@@ -88,12 +86,6 @@ def save_to_db(record, prediction):
     rec = record.copy()
     rec['prediction'] = prediction
     collection.insert_one(rec)
-
-
-def send_to_evidently_service(record, prediction):
-    rec = record.copy()
-    rec['prediction'] = prediction
-    requests.post(f"{EVIDENTLY_SERVICE_ADDRESS}/iterate/faker", json=[rec], timeout=300)
 
 
 if __name__ == "__main__":

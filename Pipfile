@@ -16,6 +16,7 @@ prefect = "==2.3.1"
 boto3 = "*"
 protobuf = "~=3.19"
 pandarallel = "*"
+evidently = "==0.1.51.dev0"
 
 [dev-packages]
 ipykernel = "*"

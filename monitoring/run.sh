@@ -20,4 +20,4 @@ else
     echo "no need to build image ${LOCAL_IMAGE_NAME}"
 fi
 
-docker-compose up --build
+docker-compose up --build -d

@@ -5,9 +5,9 @@ datasets:
         - 'text'
       numerical_features: [ ]
 
-    # data_format:
-    #   separator: ','
-    #   header: true
+    data_format:
+      separator: ','
+      header: true
 
     monitors:
       - classification_performance

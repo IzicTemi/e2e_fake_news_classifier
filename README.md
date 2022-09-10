@@ -270,9 +270,10 @@ python web_service/test.py
 - If you get a {'message': 'Endpoint request timed out'} error, retry the request; the initial model loading takes time.
 
 </ol>
+
 ### Monitoring
 
-A Production Environment is simulated to get insights into model metrics and behavior. To implement this
+A Production Environment is simulated to get insights into model metrics and behavior. To implement this are highlighted below:
 
 1. Spin up the Web Service and a MongoDB database to store requests.
 ```

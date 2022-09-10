@@ -8,11 +8,14 @@ from pathlib import Path
 import mlflow
 import mlflow.pyfunc
 from flask import Flask, jsonify, request
+from pymongo import MongoClient
 from mlflow.tracking import MlflowClient
 from tensorflow.keras.preprocessing import sequence
 
 MLFLOW_TRACKING_URI = os.environ['MLFLOW_TRACKING_URI']
 client = MlflowClient(tracking_uri=MLFLOW_TRACKING_URI)
+
+MONGODB_ADDRESS = os.getenv("MONGODB_ADDRESS")
 
 
 def get_tokenizer():
@@ -45,6 +48,9 @@ def classify(prepped_tokens):
 
 
 app = Flask('fake-news-classifier')
+mongo_client = MongoClient(MONGODB_ADDRESS)
+db = mongo_client.get_database("prediction_service")
+collection = db.get_collection("data")
 
 
 @app.route('/classify', methods=['POST'])
@@ -69,7 +75,17 @@ def classify_endpoint():
         'class': final_pred,
     }
 
+    if MONGODB_ADDRESS != '':
+
+        save_to_db(text, int(final_pred is True))
+
     return jsonify(result)
+
+
+def save_to_db(record, prediction):
+    rec = record.copy()
+    rec['prediction'] = prediction
+    collection.insert_one(rec)
 
 
 if __name__ == "__main__":

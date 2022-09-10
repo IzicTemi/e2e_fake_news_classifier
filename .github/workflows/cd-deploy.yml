@@ -8,6 +8,8 @@ env:
   MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
   MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
   MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+  MODEL_NAME: 'fake-news-detect'
+  AWS_DEFAULT_REGION: 'us-east-1'
 
 jobs:
   build-push-deploy:
@@ -20,7 +22,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: "us-east-1"
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
@@ -63,7 +65,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ steps.tf-apply.outputs.ecr_repo }}
           IMAGE_TAG: "latest"
-          MODEL_NAME: 'fake_news_detect'
         run: |
           docker build -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} . \
             --build-arg MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI} \
@@ -83,23 +84,23 @@ jobs:
           IMAGE_URI: ${{ steps.build-image-step.outputs.image_uri }}
           URL: ${{ steps.tf-apply.outputs.lambda_rest_api_url }}
         run: |
-          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region ${AWS_DEFAULT_REGION} --query 'Configuration.LastUpdateStatus' --output text)
               while [[ "$STATE" == "InProgress" ]]
               do
                   echo "sleep 5sec ...."
                   sleep 5s
-                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region ${AWS_DEFAULT_REGION} --query 'Configuration.LastUpdateStatus' --output text)
                   echo $STATE
               done
 
           aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $IMAGE_URI
 
-          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+          STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region ${AWS_DEFAULT_REGION} --query 'Configuration.LastUpdateStatus' --output text)
               while [[ "$STATE" == "InProgress" ]]
               do
                   echo "sleep 5sec ...."
                   sleep 5s
-                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region "us-east-1" --query 'Configuration.LastUpdateStatus' --output text)
+                  STATE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION --region ${AWS_DEFAULT_REGION} --query 'Configuration.LastUpdateStatus' --output text)
                   echo $STATE
               done
 

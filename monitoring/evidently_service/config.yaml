@@ -1,0 +1,22 @@
+datasets:
+  faker:
+    column_mapping:
+      categorical_features:
+        - 'text'
+      numerical_features: [ ]
+
+    data_format:
+      separator: ','
+      header: true
+
+    monitors:
+      - classification_performance
+      - cat_target_drift
+      - data_drift
+service:
+  calculation_period_sec: 2
+  min_reference_size: 30
+  moving_reference: false
+  datasets_path: datasets
+  use_reference: false
+  window_size: 10

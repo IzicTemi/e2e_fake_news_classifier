@@ -4,19 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-mlflow = "==1.28.0"
-optuna = "==2.10"
-nltk = "*"
-numpy = "*"
-pandas = "*"
-sklearn = "*"
-beautifulsoup4 = "*"
-kaggle = "*"
-prefect = "==2.3.1"
-boto3 = "*"
-protobuf = "~=3.19"
-pandarallel = "*"
+dataclasses = "==0.6"
+flask = "~=2.0.1"
+pandas = "~=1.1.5"
+werkzeug = "~=2.0.1"
+requests = "~=2.26.0"
+prometheus-client = "~=0.11.0"
+pyyaml = "~=5.4.1"
+gunicorn = "*"
 evidently = "==0.1.51.dev0"
+gevent = "*"
 
 [dev-packages]
 ipykernel = "*"

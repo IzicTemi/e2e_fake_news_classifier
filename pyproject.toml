@@ -11,7 +11,8 @@ disable = [
     "redefined-outer-name",
     "duplicate-code",
     "logging-fstring-interpolation",
-    "ungrouped-imports"
+    "ungrouped-imports",
+    "redefined-outer-name"
 ]
 
 [tool.black]

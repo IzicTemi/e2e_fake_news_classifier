@@ -1,0 +1,29 @@
+version: '3.7'
+
+volumes:
+  mongo_data: {}
+
+networks:
+  front_tier:
+  back_tier:
+
+services:
+  web_service:
+    image: ${LOCAL_IMAGE_NAME}
+    environment:
+      MONGODB_ADDRESS: "mongodb://mongo.:27017/"
+    ports:
+      - "9696:9696"
+    networks:
+      - back_tier
+      - front_tier
+
+  mongo:
+    image: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - back_tier
+      - front_tier

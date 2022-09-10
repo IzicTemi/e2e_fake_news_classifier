@@ -10,6 +10,7 @@ sklearn = "*"
 gunicorn = "*"
 boto3 = "*"
 flask = "*"
+pymongo = "*"
 
 [dev-packages]
 requests = "*"

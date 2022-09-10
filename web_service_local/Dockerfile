@@ -30,4 +30,4 @@ RUN [ "python", "prepare.py"]
 
 EXPOSE 9696
 
-ENTRYPOINT [ "gunicorn", "--bind=0.0.0.0:9696", "classify:app" ]
+ENTRYPOINT [ "gunicorn", "--bind=0.0.0.0:9696", "--timeout=600", "classify:app" ]

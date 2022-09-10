@@ -1,3 +1,10 @@
+<p align="center">
+    <a href="https://github.com/IzicTemi/e2e_fake_news_classifier/actions/workflows/ci-tests.yaml"><img src="https://github.com/IzicTemi/e2e_fake_news_classifier/actions/workflows/ci-tests.yaml/badge.svg" alt="Tests">
+    </a>
+    <a href="https://github.com/IzicTemi/e2e_fake_news_classifier/actions/workflows/cd-deploy.yml"><img src="https://github.com/IzicTemi/e2e_fake_news_classifier/actions/workflows/cd-deploy.yml/badge.svg" alt="Deploy">
+    </a>
+</p>
+
 # End to End Fake News Classifier
 
 This repository contains an implementation of an end to end fake news classifier.
@@ -19,7 +26,7 @@ This data consists of about 40000 articles consisting of fake and real news. The
 
 ## Project Solution and Architecture
 
-![Alt text](images/e2e_architecture.jpeg?raw=true "Project Architecture")
+![Alt text](images/e2e_architecture.png?raw=true "Project Architecture")
 
 Tools used include:
 1. [Terraform](https://www.terraform.io) is the Infrastructure as Code (IaC) tool used for creating resources.
@@ -275,20 +282,20 @@ python web_service/test.py
 
 A Production Environment is simulated to get insights into model metrics and behavior. To implement this are highlighted below:
 
-1. Spin up the Web Service and a MongoDB database to store requests.
+#### 1. Spin up the Web Service and a MongoDB database to store requests.
 ```
 cd monitoring
 
 ./run.sh
 ```
-2. Run [send_data.py](monitoring/send_data.py) to simulate requests to the model web service.
+#### 2. Run [send_data.py](monitoring/send_data.py) to simulate requests to the model web service.
 ```
 python send_data.py
 ```
 - The above script creates a shuffled dataframe from the dataset which sends each row to the model service for prediction.
 - To generate enough data, let this run for at least 30 minutes.
 
-3. Generate a report from the run by running:
+#### 3. Generate a report from the run by running:
 ```
 python prefect_monitoring.py
 ```

@@ -31,11 +31,11 @@ def upload_target(filename):
     logger = get_run_logger()
     logger.info("Simulating data in MongoDB")
     client = MongoClient("mongodb://localhost:27018/")
-    collection = client.get_database("prediction_service").get_collection("data")
+    collection = client.get_database("prediction_server").get_collection("data")
     with open(filename, encoding='utf-8') as f_target:
         for line in f_target.readlines():
             row = line.split(",")
-            collection.update_one({"id": row[0]}, {"$set": {"target": float(row[1])}})
+            collection.update_one({"_id": row[0]}, {"$set": {"target": row[1]}})
     client.close()
 
 
@@ -92,7 +92,9 @@ def load_reference_data(path):
     reference_data = pd.concat([true, false])
 
     reference_data['text'] = reference_data['title'] + "\n" + reference_data['text']
-    # reference_data['target'] = reference_data['category']
+    reference_data['target'] = reference_data['category']
+
+    reference_data = reference_data.sample(frac=0.05, random_state=1)
 
     init_prep = prepare.submit()
     model_future = load_model.submit(wait_for=[init_prep])
@@ -101,9 +103,12 @@ def load_reference_data(path):
         reference_data['text'], wait_for=[init_prep]
     )
     prepped_tokens = prepped_tokens_future.result()
-    reference_data['prediction'] = model.predict(prepped_tokens)
+    pred = model.predict(prepped_tokens)
+    int_pred = (pred > 0.5).astype("int32")
 
-    # del reference_data['category']
+    reference_data['prediction'] = int_pred
+
+    del reference_data['category']
     del reference_data['title']
     del reference_data['subject']
     del reference_data['date']
@@ -118,7 +123,7 @@ def fetch_data():
     logger = get_run_logger()
     logger.info("Fetching data from MongoDB")
     client = MongoClient("mongodb://localhost:27018/")
-    data = client.get_database("prediction_service").get_collection("data").find()
+    data = client.get_database("prediction_server").get_collection("data").find()
     df = pd.DataFrame(list(data))
     return df
 
@@ -136,7 +141,7 @@ def run_evidently(ref_data, data):
     )
     mapping = ColumnMapping(
         prediction="prediction",
-        target="category",
+        target="target",
         numerical_features=[],
         categorical_features=['text'],
         datetime_features=[],
@@ -159,7 +164,7 @@ def save_report(result):
     logger = get_run_logger()
     logger.info("Saving report to MongoDB... ")
     client = MongoClient("mongodb://localhost:27018/")
-    client.get_database("prediction_service").get_collection("report").insert_one(
+    client.get_database("prediction_server").get_collection("report").insert_one(
         result[0]
     )
 

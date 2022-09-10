@@ -1,7 +1,7 @@
 import os
 import json
-import uuid
 from time import sleep
+from hashlib import sha1
 
 import pandas as pd
 import requests
@@ -28,6 +28,10 @@ def read_data(path):
     return df
 
 
+def compute_hash(text):
+    return sha1(text.lower().encode('utf-8')).hexdigest()
+
+
 path = os.getenv('DATA_PATH')
 
 rel_path = f"../{path}"
@@ -38,8 +42,7 @@ url = 'http://127.0.0.1:9696/classify'
 
 with open("target.csv", 'a', encoding='utf-8') as f_target:
     for index, row in data.iterrows():
-        row['id'] = str(uuid.uuid4())
-        f_target.write(f"{row['id']},{row['category']}\n")
+        row['_id'] = compute_hash(row['text'])
 
         event = {'text': row['text']}
         resp = requests.post(
@@ -48,5 +51,8 @@ with open("target.csv", 'a', encoding='utf-8') as f_target:
             data=json.dumps(event),
             timeout=600,
         ).json()
-        print(f"class: {int(resp['class'] is True)}")
-        sleep(1)
+
+        pred = int(resp['class'] is True)
+        f_target.write(f"{row['_id']},{row['category']},\n")
+        print(f"class: {pred}")
+        sleep(0.5)

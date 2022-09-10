@@ -3,6 +3,7 @@
 
 import os
 import pickle
+from hashlib import sha1
 from pathlib import Path
 
 import mlflow
@@ -23,6 +24,10 @@ def get_tokenizer():
         tokenizer = pickle.load(f_in)
 
     return tokenizer
+
+
+def compute_hash(text):
+    return sha1(text.lower().encode('utf-8')).hexdigest()
 
 
 def prepare(text):
@@ -49,7 +54,7 @@ def classify(prepped_tokens):
 
 app = Flask('fake-news-classifier')
 mongo_client = MongoClient(MONGODB_ADDRESS)
-db = mongo_client.get_database("prediction_service")
+db = mongo_client.get_database("prediction_server")
 collection = db.get_collection("data")
 
 
@@ -85,6 +90,7 @@ def classify_endpoint():
 def save_to_db(record, prediction):
     rec = record.copy()
     rec['prediction'] = prediction
+    rec['_id'] = compute_hash(record['text'])
     collection.insert_one(rec)
 
 

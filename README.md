@@ -33,7 +33,7 @@ Tools used include:
 2. [MLflow](https://www.mlflow.org) for experiment tracking and as a model registry.
 3. [Docker](https://www.docker.com) for containerization.
 4. [Prefect 2.0](https://www.prefect.io/opensource/v2/) for workflow orchestration.
-5. [AWS S3 Lambda](https://aws.amazon.com/s3/) for cloud deployment and inference.
+5. [AWS Lambda](https://aws.amazon.com/lambda/) for cloud deployment and inference.
 6. [Flask](https://flask.palletsprojects.com/en/2.2.x/) for local deployment and inference.
 7. [Evidently AI](https://docs.evidentlyai.com/) for monitoring.
 8. [Github Actions](https://github.com/features/actions) for Continuous Integration and Continuous Delivery.
@@ -73,7 +73,7 @@ sudo ./aws/install
 rm -r awscliv2.zip aws/
 ```
 
-Create AWS user with administrator access. Note the AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID.
+Create AWS user with administrator access. Note the `AWS_SECRET_ACCESS_KEY` and `AWS_ACCESS_KEY_ID`.
 
 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
 
@@ -112,36 +112,36 @@ cd e2e_fake_news_classifier
 
 Edit [set_env.sh](scripts/set_env.sh) in [scripts](scripts/) folder.
 
- - Get KAGGLE_USERNAME and KAGGLE_KEY following the instructions [here](https://www.kaggle.com/docs/api#:~:text=is%20%24PYTHON_HOME/Scripts.-,Authentication,-In%20order%20to).
+ - Get `KAGGLE_USERNAME` and `KAGGLE_KEY` following the instructions [here](https://www.kaggle.com/docs/api#:~:text=is%20%24PYTHON_HOME/Scripts.-,Authentication,-In%20order%20to).
 
- - DATA_PATH is path to store data. Preferrably "data".
+ - `DATA_PATH` is path to store data. Preferrably "data".
 
- - MODEL_BUCKET is the intended name of s3 bucket to store MLflow artifacts.
+ - `MODEL_BUCKET` is the intended name of s3 bucket to store MLflow artifacts.
 
- - PROJECT_ID is the tag to add to created resources to ensure uniqueness.
+ - `PROJECT_ID` is the tag to add to created resources to ensure uniqueness.
 
- - MLFLOW_TRACKING_URI is the tracking server url. Default is http://127.0.0.1:5000 for local MLflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance.
+ - `MLFLOW_TRACKING_URI` is the tracking server url. Default is http://127.0.0.1:5000 for local MLflow setup. Leave empty if you want to setup Mlfow on AWS ec2 instance.
 
- - TFSTATE_BUCKET is the intended name of s3 bucket to store Terraform State files.
+ - `TFSTATE_BUCKET` is the intended name of s3 bucket to store Terraform State files.
 
- - AWS_SECRET_ACCESS_KEY and AWS_ACCESS_KEY_ID from user created above.
+ - `AWS_SECRET_ACCESS_KEY` and `AWS_ACCESS_KEY_ID` from user created above.
 
- - AWS_DEFAULT_REGION is the default region for resources to be created.
+ - `AWS_DEFAULT_REGION` is the default region for resources to be created.
 
- - ECR_REPO_NAME is the intended name of ECR registry to store docker images.
+ - `ECR_REPO_NAME` is the intended name of ECR registry to store docker images.
 
- - MODEL_NAME is the name to which to register the trained models.
+ - `MODEL_NAME` is the name to which to register the trained models.
 
  Optional
 
- - MLFLOW_TRACKING_USERNAME and MLFLOW_TRACKING_PASSWORD if using an authenticated MLflow server.
+ - `MLFLOW_TRACKING_USERNAME` and `MLFLOW_TRACKING_PASSWORD` if using an authenticated MLflow server.
 
 Run command:
 ```
 source scripts/set_env.sh
 ```
 
-#### 2. Create S3 Bucket to store Terraform States
+#### 2. Create S3 Bucket to store Terraform states
 
 This can be done from the console or by running
 ```
@@ -174,7 +174,7 @@ find . -type f -exec sed -i "s/us-east-1/$AWS_DEFAULT_REGION/g" {} \;
 
 ### Instructions
 
-#### 1. Install dependencies and setup environment
+#### 1. Install dependencies and set up environment
 ```
 make setup
 ```
@@ -233,15 +233,15 @@ prefect orion start
 #### 8. Deploying the Model
 <ol type="a">
 
-<li> Deploy web service locally using Flask</li>
+<li> Deploy web service locally using Flask.</li>
 
 ```
 cd web_service_local
 
 ./run.sh
 ```
-- To make inferences, make a POST request to http://127.0.0.1:9696/classify
-- The content of the POST request should be of the format:
+- To make inferences, make a `POST` request to http://127.0.0.1:9696/classify.
+- The content of the `POST` request should be of the format:
 ```
 {
     'text': text
@@ -249,20 +249,20 @@ cd web_service_local
 ```
 **OR**
 
-Edit and run [test.py](web_service_local/test.py) in [web_service_local](web_service_local/) folder
+Edit and run [test.py](web_service_local/test.py) in [web_service_local](web_service_local/) folder.
 ```
 python web_service_local/test.py
 ```
 
-<li> Manually deploy web service to AWS Lambda </li>
+<li> Manually deploy web service to AWS Lambda. </li>
 
 ```
 make publish
 ```
 - The above command uses Terraform to deploy the model to AWS Lambda and exposes it using an API gateway endpoint.
 - The scripts outputs the endpoint of the Lambda function.
-- To make inferences, make a POST request to the output url.
-- The content of the POST request should be of the format:
+- To make inferences, make a `POST` request to the output url.
+- The content of the `POST` request should be of the format:
 ```
 {
     'text': text
@@ -270,7 +270,7 @@ make publish
 ```
 **OR**
 
-Edit and run [test.py](web_service/test.py) in [web_service](web_service/) folder
+Edit and run [test.py](web_service/test.py) in [web_service](web_service/) folder.
 ```
 python web_service/test.py
 ```
@@ -280,7 +280,7 @@ python web_service/test.py
 
 ### Monitoring
 
-A Production Environment is simulated to get insights into model metrics and behavior. To implement this are highlighted below:
+A Production Environment is simulated to get insights into model metrics and behavior. To implement this, follow the steps below:
 
 #### 1. Spin up the Web Service and a MongoDB database to store requests.
 ```
@@ -288,21 +288,34 @@ cd monitoring
 
 ./run.sh
 ```
+- The above command pulls the MongoDB docker image and runs it on port 27017.
+- It also starts up the web service from [web_service_local](web_service_local/) on port 9696.
+
 #### 2. Run [send_data.py](monitoring/send_data.py) to simulate requests to the model web service.
 ```
 python send_data.py
 ```
-- The above script creates a shuffled dataframe from the dataset which sends each row to the model service for prediction.
+- The above script creates a shuffled dataframe from the dataset and makes a `POST` request with text from each row to the model service for prediction.
 - To generate enough data, let this run for at least 30 minutes.
 
-#### 3. Generate a report from the run by running:
+#### 3. Generate a report from the simulation by running:
 ```
 python prefect_monitoring.py
 ```
-- The above command sets up a Prefect workflow which uses Evidently AI to calculate data drift, target drift and classification performance
-- This generates an HTML report saved to xxx
+- The above command sets up a Prefect workflow which uses Evidently AI to calculate data drift, target drift and classification performance.
+- This generates an HTML report `evidently_report.html` showing the metrics.
+
+#### 4. Stop the docker containers on completion.
+```
+docker-compose down
+```
 
 ### Tests
+
+This runs linting and unit tests on the code. It also builds the web service and ensures that inferences can be successfully made.
+
+Ensure you're in the base folder to run these.
+
 ```
 make test
 make integration_test
@@ -314,7 +327,7 @@ This allows for automatic tests and deployment by making and pushing changes to 
 
 #### 1. Fork repository and clone fork to local machine.
 
-#### 2. Switch branch to test-branch
+#### 2. Switch branch to test-branch.
 ```
 git checkout test-branch
 ```
@@ -326,15 +339,15 @@ git checkout test-branch
 ![Alt text](images/github_secrets.png?raw=true "Github Repository Secrets")
 - On the github repo, navigate to Settings -> Secrets -> Actions.
 - Add new Secrets by clicking on "New repository secret".
-- Copy the output of the command below and set as the value SSH_PRIVATE_KEY. This allows terraform interact with the MLflow Server.
+- Copy the output of the command below and set as the value `SSH_PRIVATE_KEY`. This allows terraform interact with the MLflow Server.
 ```
 cat infrastructure/modules/ec2/webserver_key.pem
 ```
 
 #### 5. Edit [ci-tests.yaml](.github/workflows/ci-tests.yaml) and [cd-deploy.yml](.github/workflows/cd-deploy.yml) in [.github/workflows](.github/workflows/) folder.
 
-- Replace env variable MODEL_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11).
-- Replace env variable ECR_REPO_NAME in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15).
+- Replace env variable `MODEL_NAME` in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L14) and [cd-deploy.yml](.github/workflows/cd-deploy.yml#11).
+- Replace env variable `ECR_REPO_NAME` in [ci-tests.yaml](.github/workflows/ci-tests.yaml#L15).
 
 #### 6. Commit and push changes to Github.
 
@@ -358,4 +371,13 @@ force_destroy = false
 Empty and delete the Terraform state bucket from the console or by running:
 ```
 aws s3 rm s3://$TFSTATE_BUCKET --recursive
-aws s3api delete-bucket --bucket $TFSTATE_BUC
+aws s3api delete-bucket --bucket $TFSTATE_BUCKET
+```
+
+## Acknowledgement
+
+- The instructors of the [MLOps Zoomcamp Course](https://github.com/DataTalksClub/mlops-zoomcamp) who taught most of the concepts used in the project.
+- The [DataTalksClub](https://datatalks.club/) community.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.

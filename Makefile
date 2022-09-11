@@ -44,6 +44,12 @@ create_key:
 	sudo apt install -y jq
 	cd infrastructure && bash ../scripts/mlflow_setup.sh
 
+monitor_setup:
+	cd monitoring && ./run.sh
+
+make stop_monitor:
+	cd monitoring && docker-compose down
+
 destroy: create_key
 	cd infrastructure && terraform destroy -var-file=vars/prod.tfvars
 	aws ec2 delete-key-pair --key-name webserver_key

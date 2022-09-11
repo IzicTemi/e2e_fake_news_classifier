@@ -18,3 +18,5 @@ save/
 *.err
 *.pem
 extra.txt
+*.csv
+*.html

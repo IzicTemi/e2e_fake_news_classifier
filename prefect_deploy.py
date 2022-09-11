@@ -9,6 +9,7 @@ from prefect.orion.schemas.schedules import CronSchedule
 
 from train import study_and_train
 from get_data import get_data
+from prefect_monitoring import batch_analyze
 
 
 @flow(name='scheduled_training')
@@ -25,12 +26,20 @@ def scheduler(date=None):
     study_and_train()
 
 
-deployment = Deployment.build_from_flow(
+deployment_train = Deployment.build_from_flow(
     flow=scheduler,
     name="model_training",
     schedule=CronSchedule(cron="0 0 * * 1"),
     work_queue_name="main",
 )
 
+deployment_analysis = Deployment.build_from_flow(
+    flow=batch_analyze,
+    name="model_analysis",
+    schedule=CronSchedule(cron="0 0 * * 4"),
+    work_queue_name="main",
+)
+
 if __name__ == '__main__':
-    deployment.apply()
+    deployment_train.apply()
+    deployment_analysis.apply()

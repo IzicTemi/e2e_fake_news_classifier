@@ -4,6 +4,7 @@ import os
 import json
 import pickle
 from pathlib import Path
+from datetime import datetime
 
 import mlflow
 import pandas as pd
@@ -12,6 +13,7 @@ from pymongo import MongoClient
 from evidently import ColumnMapping
 from mlflow.tracking import MlflowClient
 from evidently.dashboard import Dashboard
+from dateutil.relativedelta import relativedelta
 from evidently.model_profile import Profile
 from evidently.dashboard.tabs import (
     DataDriftTab,
@@ -25,6 +27,9 @@ from evidently.model_profile.sections import (
     ClassificationPerformanceProfileSection,
 )
 
+from train import study_and_train
+from get_data import get_data
+
 
 @task
 def upload_target(filename):
@@ -35,7 +40,7 @@ def upload_target(filename):
     with open(filename, encoding='utf-8') as f_target:
         for line in f_target.readlines():
             row = line.split(",")
-            collection.update_one({"_id": row[0]}, {"$set": {"target": row[1]}})
+            collection.update_one({"_id": row[0]}, {"$set": {"target": int(row[1])}})
     client.close()
 
 
@@ -165,7 +170,10 @@ def save_report(result):
     logger.info("Saving report to MongoDB... ")
     client = MongoClient("mongodb://localhost:27018/")
     client.get_database("prediction_server").get_collection("report").insert_one(
-        result[0]
+        {'cat_target_drift': result[0]['cat_target_drift']}
+    )
+    client.get_database("prediction_server").get_collection("report").insert_one(
+        {'classification_performance': result[0]['classification_performance']}
     )
 
 
@@ -176,16 +184,60 @@ def save_html_report(result):
     result[1].save("evidently_report.html")
 
 
+@flow(name='forced_training')
+def start_train(date=None):
+    logger = get_run_logger()
+    if date is None:
+        day = datetime.today()
+        date = day.strftime("%Y-%m-%d")
+
+    data_date = day - relativedelta(months=1)
+    logger.info(f"Getting data for month: {str(data_date.month).zfill(2)}")
+    get_data()
+    logger.info(f"Training on: {date}")
+    study_and_train()
+
+
+@flow
+def check_model_performance(result):
+    '''
+    This flow runs an analysis of the model using evidently and checks if the model's
+    accuracy is worse by the reference accuracy by up to 10%.
+
+    If yes, it triggers the training workflow.
+    '''
+    logger = get_run_logger()
+    logger.info('Checking model Performance... ')
+    # Get reference accuracy
+    ref_accuracy = result[0]['classification_performance']['data']['metrics'][
+        'reference'
+    ]['accuracy']
+    # Get current model accuracy
+    curr_accuracy = result[0]['classification_performance']['data']['metrics'][
+        'current'
+    ]['accuracy']
+    # Check if current model accuracy is worse than reference by up to 0.1
+    if ref_accuracy - curr_accuracy > 0.1:  # if yes, trigger training workflow.
+        logger.info(
+            'Model in Production has poor performance, starting training workflow'
+        )
+        start_train()
+    else:
+        logger.info('Model Performance still up to par')
+    logger.info('Done.')
+
+
 @flow
 def batch_analyze():
     upload_target.submit("target.csv")
     path = os.getenv('DATA_PATH')
-    rel_path = f'../{path}'
-    ref_data = load_reference_data(rel_path)
+    ref_data = load_reference_data(path)
     data = fetch_data.submit()
-    result = run_evidently.submit(ref_data, data, wait_for=[data])
-    save_report.submit(result, wait_for=[result])
-    save_html_report.submit(result, wait_for=[result])
+    result_future = run_evidently.submit(ref_data, data, wait_for=[data])
+    result = result_future.result()
+    save_report.submit(result, wait_for=[result_future])
+    save_html_report.submit(result, wait_for=[result_future])
+    check_model_performance(result)
 
 
 if __name__ == '__main__':

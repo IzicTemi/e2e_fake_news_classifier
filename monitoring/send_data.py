@@ -34,9 +34,9 @@ def compute_hash(text):
 
 path = os.getenv('DATA_PATH')
 
-rel_path = f"../{path}"
+# rel_path = f"../{path}"
 
-data = read_data(rel_path)
+data = read_data(path)
 
 url = 'http://127.0.0.1:9696/classify'
 

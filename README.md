@@ -215,22 +215,8 @@ python train.py --n_evals 2 --epochs 3
 ```
 - On completion of the optimization and training process, the best run is registered as a model and promoted to Production. This is implemented in the [register_best_model](train.py#L323) function.
 
-#### 7. Workflow Orchestration with Prefect
+#### 7. Deploying the Model
 
-To automate getting the data and training the model on a schedule run:
-```
-python prefect_deploy.py
-
-prefect agent start  --work-queue "main"
-```
-- The above script uses [Prefect](https://www.prefect.io/opensource/v2/) to automate the deployment. Using a Cron Scheduler currently set to run by 00:00 every Monday, the agent looks for work and runs it at the appointed time.
-- To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule.
-- To view the scheduled deployments, run:
-```
-prefect orion start
-```
-
-#### 8. Deploying the Model
 <ol type="a">
 
 <li> Deploy web service locally using Flask.</li>
@@ -284,18 +270,17 @@ A Production Environment is simulated to get insights into model metrics and beh
 
 #### 1. Spin up the Web Service and a MongoDB database to store requests.
 ```
-cd monitoring
-
-./run.sh
+make monitor_setup
 ```
 - The above command pulls the MongoDB docker image and runs it on port 27017.
 - It also starts up the web service from [web_service_local](web_service_local/) on port 9696.
 
 #### 2. Run [send_data.py](monitoring/send_data.py) to simulate requests to the model web service.
 ```
-python send_data.py
+python monitoring/send_data.py
 ```
 - The above script creates a shuffled dataframe from the dataset and makes a `POST` request with text from each row to the model service for prediction.
+- It saves the real values and id to `target.csv`
 - To generate enough data, let this run for at least 30 minutes.
 
 #### 3. Generate a report from the simulation by running:
@@ -304,10 +289,30 @@ python prefect_monitoring.py
 ```
 - The above command sets up a Prefect workflow which uses Evidently AI to calculate data drift, target drift and classification performance.
 - This generates an HTML report `evidently_report.html` showing the metrics.
+- It also checks the performance of the Production model against the reference and triggers the training flow if poor.
 
 #### 4. Stop the docker containers on completion.
 ```
-docker-compose down
+make stop_monitor
+```
+
+### Workflow Orchestration with Prefect
+
+To automate getting the data, training the model and running monitoring analysis on a schedule, we use Prefect deployment capabilities.
+```
+python prefect_deploy.py
+
+prefect agent start  --work-queue "main"
+```
+- The above script uses [Prefect](https://www.prefect.io/opensource/v2/) to automate the deployment using a Cron Scheduler.
+- Two deployments are currently set up:
+    - One to run the training worflow which is set to run weekly by 00:00 on Monday,
+    - Another runs the model analysis workflow weekly by 00:00 on Thursday
+- The second command sets up the agent to look for work and runs it at the appointed time.
+- To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule.
+- To view the scheduled deployments, run:
+```
+prefect orion start
 ```
 
 ### Tests
@@ -332,7 +337,7 @@ This allows for automatic tests and deployment by making and pushing changes to 
 git checkout test-branch
 ```
 
-#### 3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 7 from [Instructions](#instructions).
+#### 3. Perform all steps in [Preparing your workspace](#preparing-your-workspace) above and steps 1 - 6 from [Instructions](#instructions).
 
 #### 4. Add Github Secrets to the forked repository as shown in the image below:
 

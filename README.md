@@ -291,6 +291,10 @@ python prefect_monitoring.py
 - This generates an HTML report `evidently_report.html` showing the metrics.
 - It also checks the performance of the Production model against the reference and triggers the training flow if poor.
 
+An sample report is show below
+
+![Alt text](images/example_report.png?raw=true "Example report")
+
 #### 4. Stop the docker containers on completion.
 ```
 make stop_monitor
@@ -314,6 +318,10 @@ prefect agent start  --work-queue "main"
 ```
 prefect orion start
 ```
+
+An example of scheduled runs is shown below
+
+![Alt text](images/scheduled_deployment.png?raw=true "Example scheduled runs")
 
 ### Tests
 

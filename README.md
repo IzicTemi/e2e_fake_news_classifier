@@ -223,7 +223,6 @@ python train.py --n_evals 2 --epochs 3
 
 ```
 cd web_service_local
-
 ./run.sh
 ```
 - To make inferences, make a `POST` request to http://127.0.0.1:9696/classify.
@@ -305,12 +304,11 @@ make stop_monitor
 To automate getting the data, training the model and running monitoring analysis on a schedule, we use Prefect deployment capabilities.
 ```
 python prefect_deploy.py
-
 prefect agent start  --work-queue "main"
 ```
 - The above script uses [Prefect](https://www.prefect.io/opensource/v2/) to automate the deployment using a Cron Scheduler.
 - Two deployments are currently set up:
-    - One to run the training worflow which is set to run weekly by 00:00 on Monday,
+    - One to run the training workflow which is set to run weekly by 00:00 on Monday,
     - Another runs the model analysis workflow weekly by 00:00 on Thursday
 - The second command sets up the agent to look for work and runs it at the appointed time.
 - To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule.

@@ -106,7 +106,7 @@ git clone https://github.com/IzicTemi/e2e_fake_news_classifier.git
 cd e2e_fake_news_classifier
 ```
 
-### Preparing your workspace
+### Preparing your Workspace
 
 #### 1. Set Environment Variables
 
@@ -201,6 +201,8 @@ python get_data.py
 mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
+Navigate to http://\<IP\>/5000
+- \<IP\> is localhost or 127.0.0.1 if running on PC, else, it's the VM's public IP adress.
 
 #### 6. Train the model
 
@@ -241,6 +243,7 @@ python web_service_local/test.py
 
 <li> Manually deploy web service to AWS Lambda. </li>
 
+**Note:** Ensure you're using a hosted MLflow Server when running this. See [step 4](#4-optional---set-up-mlflow-server-on-ec2-instance) in [Preparing your Workspace](#preparing-your-workspace) above.
 ```
 make publish
 ```
@@ -288,7 +291,7 @@ python prefect_monitoring.py
 ```
 - The above command sets up a Prefect workflow which uses Evidently AI to calculate data drift, target drift and classification performance.
 - This generates an HTML report `evidently_report.html` showing the metrics.
-- It also checks the performance of the Production model against the reference and triggers the training flow if poor.
+- It also checks the performance of the Production model against the reference and triggers the training flow if poor (difference of 10% set).
 
 An sample report is show below
 
@@ -316,6 +319,9 @@ prefect agent start  --work-queue "main"
 ```
 prefect orion start --host 0.0.0.0
 ```
+Navigate to http://\<IP\>/4200
+- \<IP\> is localhost or 127.0.0.1 if running on PC, else, it's the VM's public IP adress.
+
 
 An example of scheduled runs is shown below
 

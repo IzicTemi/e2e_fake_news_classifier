@@ -198,7 +198,7 @@ python get_data.py
 
 #### 5. Optional - If running locally, start MLflow server
 ```
-mlflow server --backend-store-uri sqlite:///mlflow.db \
+mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db \
     --default-artifact-root $ARTIFACT_LOC --serve-artifacts
 ```
 
@@ -314,7 +314,7 @@ prefect agent start  --work-queue "main"
 - To change the schedule, edit the [prefect_deploy.py](prefect_deploy.py) file and change the Cron schedule.
 - To view the scheduled deployments, run:
 ```
-prefect orion start
+prefect orion start --host 0.0.0.0
 ```
 
 An example of scheduled runs is shown below
